@@ -12,7 +12,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback } from 'react';
 
-
 const LoginPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -30,9 +29,9 @@ useFocusEffect(
 
   const handleLogin = () => {
 
-    // const isValid = validateLogin();
-    // if (!isValid)
-    //   return;
+    const isValid = validateLogin();
+    if (!isValid)
+      return;
     // Handle login logic
     router.push('(tabs)');
   };
