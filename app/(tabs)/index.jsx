@@ -5,7 +5,6 @@ import OrderStatusTab from '../../components/OrderStatusTab';
 const HomePage = () => {
   return (
     <View style={styles.background}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Dashboard Heading */}
         <View style={styles.headerWrapper}>
           <View style={styles.headingRow}>
@@ -13,7 +12,7 @@ const HomePage = () => {
             <Text style={styles.dateText}>22 JUL</Text>
           </View>
 
-          <View style={{ marginTop: 40 }}>
+          <View style={{ marginTop: 30 }}>
             <Text style={styles.subHeadingText}>Tổng doanh thu</Text>
             <Text style={styles.headingText}>$123456789</Text>
           </View>
@@ -36,9 +35,8 @@ const HomePage = () => {
           <Text style={styles.placeholderText}>
             <OrderStatusTab></OrderStatusTab>
           </Text>
-          {/* Add dynamic content below here */}
+          {/* Add dynamic content below here */} 
         </View>
-      </ScrollView>
     </View>
   );
 };
@@ -50,10 +48,6 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     backgroundColor: '#E16A54',
-  },
-
-  scrollContent: {
-    paddingBottom: 40, // Optional: for bottom space
   },
 
   headerWrapper: {
@@ -116,7 +110,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: 20,
-    paddingVertical: 30,
+    paddingVertical: 20,
     paddingHorizontal: 20,
     minHeight: "100%", // Set a high value to simulate infinite scroll
   },
