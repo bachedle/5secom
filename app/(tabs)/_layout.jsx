@@ -53,7 +53,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="page3"
+          name="randomPage"
           options={{
             title: 'Sản Xuất',
             tabBarIcon: ({ color, size }) => (
@@ -62,7 +62,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="randomPage"
+          name="user"
           options={{
             title: 'Cá Nhân',
             tabBarIcon: ({ color, size }) => (
