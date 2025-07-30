@@ -1,14 +1,14 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-const page2 = () => {
+const ProductList = () => {
   return (
     <View>
-      <Text>page2</Text>
+      <Text>page1</Text>
     </View>
   )
 }
 
-export default page2
+export default ProductList
 
 const styles = StyleSheet.create({})
