@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouter } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
 
-const Page3 = () => {
+const UserPage = () => {
   const router = useRouter();
 
   const handleLogout = () => {
@@ -48,7 +48,7 @@ const Page3 = () => {
   );
 };
 
-export default Page3;
+export default UserPage;
 
 const styles = StyleSheet.create({
   background: {

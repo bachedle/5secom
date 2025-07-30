@@ -35,7 +35,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="page1"
+          name="randomPage"
           options={{
             title: 'Đơn Hàng',
             tabBarIcon: ({ color, size }) => (
@@ -44,7 +44,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="page2"
+          name="QRPage"
           options={{
             title: 'Mã QR',
             tabBarIcon: ({ color, size }) => (
@@ -53,7 +53,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="randomPage"
+          name="ProductList"
           options={{
             title: 'Sản Xuất',
             tabBarIcon: ({ color, size }) => (
@@ -62,7 +62,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="user"
+          name="UserPage"
           options={{
             title: 'Cá Nhân',
             tabBarIcon: ({ color, size }) => (
