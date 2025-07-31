@@ -29,9 +29,9 @@ useFocusEffect(
 
   const handleLogin = () => {
 
-    const isValid = validateLogin();
-    if (!isValid)
-      return;
+    // const isValid = validateLogin();
+    // if (!isValid)
+    //   return;
     // Handle login logic
     router.push('(tabs)');
   };
