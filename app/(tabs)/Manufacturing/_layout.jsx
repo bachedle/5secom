@@ -5,7 +5,7 @@ export const unstable_settings = {
   initialRouteName: 'index',
 };
 
-export default function RandomPageLayout() {
+export default function ManufacturingLayout() {
   return (
     <Stack
       screenOptions={{
@@ -13,8 +13,10 @@ export default function RandomPageLayout() {
       }}
     >
       {/* these will match your file names: */}
-      <Stack.Screen name="index" options={{ title: 'Random Home' }} />
-      <Stack.Screen name="page1"  options={{ title: 'Page 1' }} />
+      <Stack.Screen name="index"/>
+      <Stack.Screen name="category/[category]" />
+      {/* <Stack.Screen name="ManuList" options={{ title: 'Quản Lý Đơn' }} />
+      <Stack.Screen name="ManuDetail" options={{ title: 'Chi Tiết Sản Xuất' }} /> */}
     </Stack>
   );
 }

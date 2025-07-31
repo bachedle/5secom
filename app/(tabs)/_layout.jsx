@@ -14,7 +14,6 @@ export default function TabLayout() {
     <>
       <Tabs
         screenOptions={{
-          headerShown: false,
           tabBarStyle: {
             height: 100,
             
@@ -28,6 +27,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
+            headerShown: false,
             title: 'Home',
             tabBarIcon: ({ color, size }) => (
               <AntDesign name="home" color={color} size={size} />
@@ -35,9 +35,10 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="randomPage"
+          name="Manufacturing"
           options={{
-            title: 'Đơn Hàng',
+            headerShown: true,
+            title: 'Sản Xuất',
             tabBarIcon: ({ color, size }) => (
               <AntDesign name="shoppingcart" color={color} size={size} />
             ),
@@ -46,6 +47,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="QRPage"
           options={{
+            headerShown: true,
             title: 'Mã QR',
             tabBarIcon: ({ color, size }) => (
               <AntDesign name="qrcode" color={color} size={size} />
@@ -55,7 +57,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="ProductList"
           options={{
-            title: 'Sản Xuất',
+            headerShown: true,
+            title: 'Đơn Hàng',
             tabBarIcon: ({ color, size }) => (
               <AntDesign name="dashboard" color={color} size={size} />
             ),
@@ -64,6 +67,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="UserPage"
           options={{
+            headerShown: false,
             title: 'Cá Nhân',
             tabBarIcon: ({ color, size }) => (
               <AntDesign name="user" color={color} size={size} />
