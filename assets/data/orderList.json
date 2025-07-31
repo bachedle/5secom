@@ -1,0 +1,112 @@
+[
+  {
+    "orderId": "A0001",
+    "sku": "SKU1001",
+    "productName": "Patch thêu",
+    "quantity": 25,
+    "updateDate": "2025-07-01",
+    "dateTime": "2025-07-01 15:30",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": false,
+    "label": "Chưa Có Hình"
+  },
+  {
+    "orderId": "A0002",
+    "sku": "SKU1002",
+    "productName": "Patch dán",
+    "quantity": 18,
+    "updateDate": "2025-07-02",
+    "dateTime": "2025-07-02 11:15",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": true,
+    "label": "Vẽ 2D"
+  },
+  {
+    "orderId": "A0003",
+    "sku": "SKU1003",
+    "productName": "Logo thêu cao cấp",
+    "quantity": 30,
+    "updateDate": "2025-07-03",
+    "dateTime": "2025-07-03 09:45",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": false,
+    "label": "Thêu"
+  },
+  {
+    "orderId": "A0004",
+    "sku": "SKU1004",
+    "productName": "Chữ thêu vi tính",
+    "quantity": 10,
+    "updateDate": "2025-07-04",
+    "dateTime": "2025-07-04 14:20",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": false,
+    "label": "Cắt Laser"
+  },
+  {
+    "orderId": "A0005",
+    "sku": "SKU1005",
+    "productName": "Patch dệt",
+    "quantity": 50,
+    "updateDate": "2025-07-05",
+    "dateTime": "2025-07-05 16:05",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": true,
+    "label": "Sản Xuất"
+  },
+  {
+    "orderId": "A0006",
+    "sku": "SKU1006",
+    "productName": "Logo in nhiệt",
+    "quantity": 12,
+    "updateDate": "2025-07-06",
+    "dateTime": "2025-07-06 10:10",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": false,
+    "label": "Đóng gói"
+  },
+  {
+    "orderId": "A0007",
+    "sku": "SKU1007",
+    "productName": "Chữ nổi 3D",
+    "quantity": 20,
+    "updateDate": "2025-07-07",
+    "dateTime": "2025-07-07 13:40",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": true,
+    "label": "Vẽ 2D"
+  },
+  {
+    "orderId": "A0008",
+    "sku": "SKU1008",
+    "productName": "Patch phản quang",
+    "quantity": 40,
+    "updateDate": "2025-07-08",
+    "dateTime": "2025-07-08 08:25",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": false,
+    "label": "Cắt Laser"
+  },
+  {
+    "orderId": "A0009",
+    "sku": "SKU1009",
+    "productName": "Logo ép nhiệt",
+    "quantity": 35,
+    "updateDate": "2025-07-09",
+    "dateTime": "2025-07-09 12:50",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": false,
+    "label": "Sản Xuất"
+  },
+  {
+    "orderId": "A0010",
+    "sku": "SKU1010",
+    "productName": "Patch thêu tay",
+    "quantity": 15,
+    "updateDate": "2025-07-10",
+    "dateTime": "2025-07-10 17:35",
+    "imageUrl": "https://via.placeholder.com/50",
+    "isFavorite": true,
+    "label": "Đóng gói"
+  }
+]

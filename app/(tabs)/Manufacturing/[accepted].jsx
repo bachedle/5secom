@@ -1,28 +1,21 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'react-native';
-import React, { useState } from 'react';
+import { useState } from 'react'
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import AcceptedList from '../../../assets/data/acceptedList.json'
+import OrderListItem from '../../../components/OrderListItem';
+
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import OrderListItem from '../../../../components/OrderListItem';
-import OrderItem from '../../../../assets/data/orderList.json';
-import AcceptedList from '../../../../assets/data/acceptedList.json'
 
-
-const ManufacturingListPage = () => {
+  
+const AcceptedOrderPage = () => {
   const { label } = useLocalSearchParams();
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
 
-  const filteredOrders = OrderItem.filter(order => order.label === label);
-
   const handleBack = () => {
-    router.replace('(tabs)/Manufacturing')
+    router.dismiss()
   };
 
-  const handleNavigateTo2ndPage = (label) => {
-    router.push({
-      pathname: '(tabs)/Manufacturing/[accepted].jsx',
-      params: { label:label }})
-  }
 
   return (
     <View style={styles.CONTAINER}>
@@ -31,18 +24,8 @@ const ManufacturingListPage = () => {
         <TouchableOpacity onPress={ handleBack }>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.HEADER_TITLE}>{label}</Text>
+        <Text style={styles.HEADER_TITLE}>{label} - Đã Nhận</Text>
         <View style={{ width: 24 }} />
-      </View>
-
-      {/* Status Tabs */}
-      <View style={styles.STATUS_TABS}>
-        <TouchableOpacity style={styles.ACTIVE_TAB} onPress={handleNavigateTo2ndPage}>
-          <Text style={styles.ACTIVE_TAB_TEXT}>Đã nhận</Text>
-          <View style={styles.TAB_BADGE}>
-            <Text style={styles.BADGE_TEXT}>{AcceptedList.length}</Text>
-          </View>
-        </TouchableOpacity>
       </View>
 
       {/* Search + Filter */}
@@ -61,14 +44,14 @@ const ManufacturingListPage = () => {
       {/* FlatList Order Cards */}
       <FlatList
         
-        data={filteredOrders}
+        data={AcceptedList}
         renderItem={({item})=> <OrderListItem orderItem={item} /> } 
       />
     </View>
-  );
-};
+  )
+}
 
-export default ManufacturingListPage;
+export default AcceptedOrderPage
 
 const styles = StyleSheet.create({
   CONTAINER: {
