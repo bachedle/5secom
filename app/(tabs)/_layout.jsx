@@ -40,7 +40,7 @@ export default function TabLayout() {
             headerShown: true,
             title: 'Sản Xuất',
             tabBarIcon: ({ color, size }) => (
-              <AntDesign name="shoppingcart" color={color} size={size} />
+              <AntDesign name="dashboard" color={color} size={size} />
             ),
           }}
         />
@@ -60,7 +60,7 @@ export default function TabLayout() {
             headerShown: true,
             title: 'Đơn Hàng',
             tabBarIcon: ({ color, size }) => (
-              <AntDesign name="dashboard" color={color} size={size} />
+              <AntDesign name="shoppingcart" color={color} size={size} />
             ),
           }}
         />
