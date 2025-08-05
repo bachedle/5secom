@@ -33,7 +33,7 @@ const OrderStatusTab = () => {
               styles.card,
               item.span ? styles.spanCard : styles.halfCard,
             ]}
-            onPress={() => handleCardPress(item.label)} // ✅ Navigate on press
+            onPress={() => handleCardPress(item.label)}
             activeOpacity={0.8}
           >
             <Text style={styles.label}>{item.label}</Text>
