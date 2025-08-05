@@ -11,6 +11,12 @@ const UserPage = () => {
     router.dismiss(); // Or replace with actual logout navigation
   };
 
+  const handleEdit = () => {
+    router.push({
+      pathname:'UserEdit',
+      // params:
+    });
+  }
   return (
     <View style={styles.background}>
       {/* Red Header Section */}
@@ -30,8 +36,8 @@ const UserPage = () => {
         <Text style={styles.role}>Role: ABCXYZ</Text>
 
         {/* Settings Row */}
-        <View style={styles.settingsRow}>
-          <Text style={styles.settingsText}>Cài Đặt</Text>
+        <View style={styles.settingsRow} >
+          <Text style={styles.settingsText} onPress={handleEdit}>Cài Đặt</Text>
           <Text style={styles.arrow}>›</Text>
         </View>
 
@@ -129,7 +135,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#000',
   },
-    signInButton: {
+  signInButton: {
     backgroundColor: '#dd6b4d',
     paddingVertical: 12,
     borderRadius: 8,

@@ -1,9 +1,16 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
-const OrderListItem = ({orderItem}) => {
+const OrderListItem = ({ orderItem }) => {
+  const router = useRouter();
+
+  const handleDetailPage = () => {
+    router.push('modal'); // Navigate to the modal page
+  };
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handleDetailPage}>
       <View style={styles.header}>
         <Text style={styles.orderId}>{orderItem.orderId}</Text>
         <Text style={styles.favorite}>{orderItem.isFavorite ? '★' : '☆'}</Text>
@@ -21,11 +28,13 @@ const OrderListItem = ({orderItem}) => {
         </View>
 
         <View style={styles.right}>
-          <Image
-            // source={imageUrl ? { uri: imageUrl } : require('../assets/placeholder.png')}
+          {/* <Image
+            // If you have an image URL: source={{ uri: orderItem.imageUrl }}
+            // Otherwise use a placeholder:
+            source={require('../assets/placeholder.png')}
             style={styles.image}
             resizeMode="cover"
-          />
+          /> */}
           <Text style={styles.qty}>{orderItem.quantity}</Text>
         </View>
       </View>
@@ -33,7 +42,7 @@ const OrderListItem = ({orderItem}) => {
       <View style={styles.labelTag}>
         <Text style={styles.labelText}>{orderItem.label}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -107,7 +116,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 10,
   },
-  buttonText: {
+  labelText: {
     color: '#000',
     fontWeight: '600',
   },
