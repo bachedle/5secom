@@ -11,17 +11,22 @@
   "dependencies": {
     "@react-native-community/checkbox": "^0.5.20",
     "axios": "^1.11.0",
+    "base-64": "^1.0.0",
     "expo": "~53.0.20",
+    "expo-barcode-scanner": "^13.0.1",
+    "expo-camera": "~16.1.11",
+    "expo-clipboard": "~7.1.5",
     "expo-constants": "~17.1.7",
+    "expo-image-picker": "~16.1.4",
     "expo-linking": "~7.1.7",
     "expo-navigation-bar": "^4.2.7",
     "expo-router": "~5.1.4",
     "expo-status-bar": "~2.2.3",
+    "jsqr": "^1.4.0",
     "react": "19.0.0",
     "react-native": "0.79.5",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.11.1",
-    "expo-image-picker": "~16.1.4"
+    "react-native-screens": "~4.11.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
