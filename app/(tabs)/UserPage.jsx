@@ -2,19 +2,22 @@ import { StyleSheet, Text, View, Button, Image } from 'react-native';
 import React from 'react';
 import { useRouter } from 'expo-router';
 import { TouchableOpacity } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 
 const UserPage = () => {
   const router = useRouter();
+  const { username, image } = useLocalSearchParams()
+  const [userImage, setUserImage] = useState(null);
 
   const handleLogout = () => {
     // Add logout logic here
-    router.dismiss(); // Or replace with actual logout navigation
+    router.dismissAll(); // Or replace with actual logout navigation
   };
 
   const handleEdit = () => {
     router.push({
       pathname:'UserEdit',
-      // params:
     });
   }
   return (
@@ -36,10 +39,10 @@ const UserPage = () => {
         <Text style={styles.role}>Role: ABCXYZ</Text>
 
         {/* Settings Row */}
-        <View style={styles.settingsRow} >
-          <Text style={styles.settingsText} onPress={handleEdit}>Cài Đặt</Text>
+        <TouchableOpacity style={styles.settingsRow} onPress={handleEdit} >
+          <Text style={styles.settingsText} >Cài Đặt</Text>
           <Text style={styles.arrow}>›</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.signInButton} onPress={handleLogout}>

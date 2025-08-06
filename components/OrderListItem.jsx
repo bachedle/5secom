@@ -1,23 +1,36 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import ModalTest from '../components/modalTest';
 
 const OrderListItem = ({ orderItem }) => {
-  const router = useRouter();
-
-  const handleDetailPage = () => {
-    router.push('modal'); // Navigate to the modal page
-  };
+  const [modalVisible, setModalVisible] = useState(false);
+  // const router = useRouter();
 
   return (
-    <TouchableOpacity style={styles.card} onPress={handleDetailPage}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => setModalVisible(true)}
+      activeOpacity={0.8}
+    >
+      {/* Card Header */}
       <View style={styles.header}>
         <Text style={styles.orderId}>{orderItem.orderId}</Text>
-        <Text style={styles.favorite}>{orderItem.isFavorite ? '★' : '☆'}</Text>
+        <Text style={styles.favorite}>
+          {orderItem.isFavorite ? '★' : '☆'}
+        </Text>
       </View>
 
+      {/* Date / Time */}
       <Text style={styles.dateTime}>{orderItem.dateTime}</Text>
 
+      {/* Main Row */}
       <View style={styles.row}>
         <View style={styles.info}>
           <Text style={styles.sku}>{orderItem.sku}</Text>
@@ -26,22 +39,23 @@ const OrderListItem = ({ orderItem }) => {
           </Text>
           <Text>Ngày Cập Nhật: {orderItem.updateDate}</Text>
         </View>
-
         <View style={styles.right}>
-          {/* <Image
-            // If you have an image URL: source={{ uri: orderItem.imageUrl }}
-            // Otherwise use a placeholder:
-            source={require('../assets/placeholder.png')}
-            style={styles.image}
-            resizeMode="cover"
-          /> */}
           <Text style={styles.qty}>{orderItem.quantity}</Text>
         </View>
       </View>
 
+      {/* Label Tag */}
       <View style={styles.labelTag}>
         <Text style={styles.labelText}>{orderItem.label}</Text>
       </View>
+
+      {/* Delegate Modal display to ModalTest */}
+      <ModalTest
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        orderItem={orderItem}
+
+      />
     </TouchableOpacity>
   );
 };
@@ -55,8 +69,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 12,
     marginVertical: 8,
-    padding: 12,
     marginHorizontal: 10,
+    padding: 12,
     shadowColor: '#000',
     shadowOffset: { width: 1, height: 2 },
     shadowOpacity: 0.2,
@@ -85,23 +99,17 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
   },
-  bold: {
-    fontWeight: 'bold',
-  },
   sku: {
     fontWeight: '600',
     marginBottom: 4,
   },
+  bold: {
+    fontWeight: 'bold',
+  },
   right: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginLeft: 10,
-  },
-  image: {
-    width: 50,
-    height: 50,
-    backgroundColor: '#ccc',
-    borderRadius: 4,
   },
   qty: {
     fontWeight: 'bold',

@@ -12,19 +12,67 @@ import {
   SafeAreaView,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const UserEdit = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
+
   const [username, setUsername] = useState('');
   const [image, setImage] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const [credname, setCredname] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    if (params.username) setUsername(params.username);
+    if (params.image) setImage(params.image);
+    if (params.credname) setCredname(params.credname);
+    if (params.phone) setPhone(params.phone);
+    if (params.email) setEmail(params.email);
+    if (params.password) setPassword(params.password);
+  }, [params]);
+
+  const handleBack = () => {
+    router.back();
+  };
+
+  const handleSave = () => {
+    router.replace({
+      pathname: '/UserPage',
+      params: {
+        username,
+        image,
+        credname,
+        phone,
+        email,
+        password,
+      },
+    });
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission denied!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -41,13 +89,25 @@ const UserEdit = () => {
           >
             <Text style={styles.title}>Thông tin cá nhân</Text>
 
+            {/* Avatar */}
             <View>
               <Text style={styles.subText}>Ảnh đại diện</Text>
               <View style={styles.avatarWrapper}>
-                <View style={styles.avatar}></View>
+                <TouchableOpacity style={styles.avatar} onPress={pickImage}>
+                  {image && (
+                    <Image source={{ uri: image }} style={styles.avatarImage} />
+                  )}
+                  <MaterialCommunityIcons
+                    name="camera"
+                    size={32}
+                    color="#fff"
+                    style={styles.cameraIcon}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
 
+            {/* Form Inputs */}
             <View>
               <Text style={styles.subText}>Username</Text>
               <TextInput
@@ -55,8 +115,8 @@ const UserEdit = () => {
                 style={styles.input}
                 value={username}
                 onChangeText={setUsername}
-                keyboardType="default"
               />
+
               <Text style={styles.subText}>Password</Text>
               <TextInput
                 placeholder="Password"
@@ -64,8 +124,8 @@ const UserEdit = () => {
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
-                keyboardType="default"
               />
+
               <Text style={styles.subText}>Họ và tên</Text>
               <TextInput
                 placeholder="Họ và Tên"
@@ -73,6 +133,7 @@ const UserEdit = () => {
                 value={credname}
                 onChangeText={setCredname}
               />
+
               <Text style={styles.subText}>Ngày sinh</Text>
               <TextInput
                 placeholder="Ngày sinh"
@@ -80,6 +141,7 @@ const UserEdit = () => {
                 value={email}
                 onChangeText={setEmail}
               />
+
               <Text style={styles.subText}>Email</Text>
               <TextInput
                 placeholder="Email"
@@ -88,6 +150,7 @@ const UserEdit = () => {
                 onChangeText={setEmail}
                 keyboardType="email-address"
               />
+
               <Text style={styles.subText}>Số điện thoại</Text>
               <TextInput
                 placeholder="Số điện thoại"
@@ -98,11 +161,12 @@ const UserEdit = () => {
               />
             </View>
 
+            {/* Buttons */}
             <View style={styles.buttonGroup}>
-              <TouchableOpacity style={styles.cancelButton}>
+              <TouchableOpacity style={styles.cancelButton} onPress={handleBack}>
                 <Text style={styles.cancelText}>Hủy</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmButton}>
+              <TouchableOpacity style={styles.confirmButton} onPress={handleSave}>
                 <Text style={styles.confirmText}>Lưu</Text>
               </TouchableOpacity>
             </View>
@@ -153,7 +217,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   cancelButton: {
-    backgroundColor: '#ffffffff',
+    backgroundColor: '#fff',
     borderColor: '#dd6b4d',
     borderWidth: 3,
     paddingVertical: 12,
@@ -185,9 +249,27 @@ const styles = StyleSheet.create({
   avatar: {
     width: 150,
     height: 150,
-    borderRadius: 180,
+    borderRadius: 75,
     backgroundColor: '#ccc',
     borderWidth: 4,
     borderColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 75,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  cameraIcon: {
+    zIndex: 2,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 8,
+    borderRadius: 50,
   },
 });

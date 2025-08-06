@@ -1,9 +1,19 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View,TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function Modal() {
+    const router = useRouter()
+    const handleBack =() => {
+        router.dismissTo('../')
+    }
   return (
     <View style={styles.container}>
       <Text>Modal screen</Text>
+      <TouchableOpacity onPress={handleBack} >
+        <Text>
+            Back
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

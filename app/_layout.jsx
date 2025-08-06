@@ -9,16 +9,16 @@ export default function RandomPageLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,    // show header for this stack
+        headerShown: false,
       }}
     >
-      {/* these will match your file names: */}
       <Stack.Screen name="index" options={{ title: 'authen' }} />
       <Stack.Screen name="(tabs)"  options={{ title: 'home' }} />
-      <Stack.Screen name="modal" options ={{
+      <Stack.Screen name="UserEdit" />
+      {/* <Stack.Screen name="modal" options ={{
         presentation: "transparentModal",
         animation: "fade"
-      }}/>
+      }}/> */}
     </Stack>
   );
 }
