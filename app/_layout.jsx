@@ -9,16 +9,20 @@ export default function RandomPageLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        headerShown: false, // default: no headers
       }}
     >
       <Stack.Screen name="index" options={{ title: 'authen' }} />
-      <Stack.Screen name="(tabs)"  options={{ title: 'home' }} />
+      <Stack.Screen name="(tabs)" options={{ title: 'home' }} />
       <Stack.Screen name="UserEdit" />
-      {/* <Stack.Screen name="modal" options ={{
-        presentation: "transparentModal",
-        animation: "fade"
-      }}/> */}
+      <Stack.Screen
+        name="category"
+        options={{
+          title: 'Sản Xuất',
+          headerShown: true,
+          headerBackVisible: false,
+        }}
+      />
     </Stack>
   );
 }

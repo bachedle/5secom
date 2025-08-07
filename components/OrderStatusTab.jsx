@@ -16,8 +16,8 @@ const OrderStatusTab = () => {
   const router = useRouter();   
 
   const handleCardPress = (label) => {
-    router.push({
-      pathname: '(tabs)/Manufacturing/category/[category]',
+    router.navigate({
+      pathname: 'category',
       params: { label:label }, // Replace with actual category if needed
     });
   };

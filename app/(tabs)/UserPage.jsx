@@ -31,7 +31,7 @@ const UserPage = () => {
   };
 
   const handleEdit = () => {
-    router.push({
+    router.navigate({
       pathname: 'UserEdit',
       params: {
         username,
@@ -43,6 +43,7 @@ const UserPage = () => {
         password,
       },
     });
+    console.log(image)
   };
 
   return (

@@ -57,9 +57,12 @@ const ModalFilter = ({
           {/* Status Picker */}
           <Text style={styles.label}>Trạng thái</Text>
           <Picker
+            style = {{ backgroundColor: '#f0f0f0'}}
             selectedValue={selectedOrder}
             onValueChange={(itemValue) => setSelectedOrder(itemValue)}
           >
+
+            {/* lấy từ option group */}
             <Picker.Item label="Tất cả" value="" />
             <Picker.Item label="Vẽ 2D" value="Vẽ 2D" />
             <Picker.Item label="Chưa Có Hình" value="Chưa Có Hình" />
@@ -92,13 +95,9 @@ const ModalFilter = ({
 
           {/* Confirm + Reset Buttons */}
           <View style={styles.buttonRow}>
-            <Pressable style={styles.filledButton} onPress={confirmFilter}>
-              <Text style={styles.filledText}>Xác Nhận</Text>
-            </Pressable>
-          </View>
-
-          <Pressable
-            style={[styles.filledButton, styles.resetButton]}
+            
+            <Pressable
+            style={[ styles.resetButton]}
             onPress={() => {
               setSelectedOrder('');
               setDeliveryDate(null);
@@ -109,6 +108,11 @@ const ModalFilter = ({
           >
             <Text style={styles.resetText}>Xóa Bộ Lọc</Text>
           </Pressable>
+          <Pressable style={styles.filledButton} onPress={confirmFilter}>
+              <Text style={styles.filledText}>Xác Nhận</Text>
+            </Pressable>
+          </View>
+          
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -168,26 +172,28 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 20
   },
   filledButton: {
-    flex: 1,
     backgroundColor: '#f18060',
-    paddingVertical: 10,
+    width: "48%",
     borderRadius: 8,
   },
   filledText: {
     textAlign: 'center',
+    padding:10,
     color: 'white',
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   resetButton: {
     backgroundColor: '#E0E0E0',
-    marginTop: 8,
+    width: " 48%",
+    borderRadius: 8,
   },
   resetText: {
     textAlign: 'center',
+    padding:10,
     color: '#333',
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });
