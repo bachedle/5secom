@@ -16,16 +16,21 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 const UserEdit = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
 
   const [username, setUsername] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const [image, setImage] = useState(null);
   const [credname, setCredname] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [birthdate, setBirthdate] = useState('');
   const [password, setPassword] = useState('');
 
   useEffect(() => {
@@ -35,6 +40,8 @@ const UserEdit = () => {
     if (params.phone) setPhone(params.phone);
     if (params.email) setEmail(params.email);
     if (params.password) setPassword(params.password);
+    if (params.birthdate) setBirthdate(params.birthdate);
+
   }, [params]);
 
   const handleBack = () => {
@@ -43,16 +50,18 @@ const UserEdit = () => {
 
   const handleSave = () => {
     router.replace({
-      pathname: '/UserPage',
-      params: {
-        username,
-        image,
-        credname,
-        phone,
-        email,
-        password,
-      },
-    });
+    pathname: '/UserPage',
+    params: {
+      username,
+      image,
+      credname,
+      phone,
+      email,
+      password,
+      birthdate, 
+  },
+});
+
   };
 
   const pickImage = async () => {
@@ -135,12 +144,28 @@ const UserEdit = () => {
               />
 
               <Text style={styles.subText}>Ngày sinh</Text>
-              <TextInput
-                placeholder="Ngày sinh"
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
                 style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-              />
+              >
+                <Text>{birthdate || 'Chọn ngày sinh'}</Text>
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={birthdate ? new Date(birthdate) : new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(false);
+                    if (selectedDate) {
+                      const formattedDate = selectedDate.toLocaleDateString('vi-VN');
+                      setBirthdate(formattedDate);
+                    }
+                  }}
+                />
+              )}
+                  
 
               <Text style={styles.subText}>Email</Text>
               <TextInput

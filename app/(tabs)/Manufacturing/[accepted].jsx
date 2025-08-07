@@ -1,30 +1,44 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'react-native';
-import { useState } from 'react'
+import { useState } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import AcceptedList from '../../../assets/data/acceptedList.json'
+import AcceptedList from '../../../assets/data/acceptedList.json';
 import OrderListItem from '../../../components/OrderListItem';
-
+import ModalFilter from '../../../components/modalFilter';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
-  
 const AcceptedOrderPage = () => {
   const { label } = useLocalSearchParams();
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
 
   const handleBack = () => {
-    router.dismiss()
+    router.dismiss();
   };
 
+  const handleStatusFilterChange = (status) => setSelectedStatus(status);
+  const handleDateFilterChange = (date) => setSelectedDate(date);
+
+  const filteredOrders = AcceptedList.filter(order => {
+    const searchMatch =
+      (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
+    const statusMatch = selectedStatus ? order.label === selectedStatus : true;
+    const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
+    return searchMatch && statusMatch && dateMatch;
+  });
 
   return (
     <View style={styles.CONTAINER}>
       {/* Header */}
       <View style={styles.HEADER}>
-        <TouchableOpacity onPress={ handleBack }>
+        <TouchableOpacity onPress={handleBack}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.HEADER_TITLE}>{label} - Đã Nhận</Text>
+        <Text style={styles.HEADER_TITLE}>Đã Nhận</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -36,22 +50,34 @@ const AcceptedOrderPage = () => {
           onChangeText={setSearchText}
           style={styles.SEARCH_INPUT}
         />
-        <TouchableOpacity style={styles.FILTER_BUTTON}>
+        <TouchableOpacity
+          style={styles.FILTER_BUTTON}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.8}>
           <MaterialIcons name="tune" size={20} color="#A34025" />
         </TouchableOpacity>
       </View>
 
       {/* FlatList Order Cards */}
       <FlatList
-        
-        data={AcceptedList}
-        renderItem={({item})=> <OrderListItem orderItem={item} /> } 
+        data={filteredOrders}
+        keyExtractor={(item) => item.orderId}
+        renderItem={({ item }) => <OrderListItem orderItem={item} />}
+      />
+
+      <ModalFilter
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        selectedStatus={selectedStatus}
+        selectedDate={selectedDate}
+        onStatusFilterChange={handleStatusFilterChange}
+        onDateFilterChange={handleDateFilterChange}
       />
     </View>
-  )
-}
+  );
+};
 
-export default AcceptedOrderPage
+export default AcceptedOrderPage;
 
 const styles = StyleSheet.create({
   CONTAINER: {
@@ -67,37 +93,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   HEADER_TITLE: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  STATUS_TABS: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  ACTIVE_TAB: {
-    backgroundColor: '#E8775D',
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    justifyContent: 'space-between',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-  },
-  ACTIVE_TAB_TEXT: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 20,
-    marginRight: 8,
-  },
-  TAB_BADGE: {
-    backgroundColor: 'white',
-    borderRadius: 50,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  BADGE_TEXT: {
-    color: '#A34025',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -119,8 +114,5 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: '#FFECE8',
     borderRadius: 8,
-  },
-  CARDS_WRAPPER: {
-    paddingBottom: 80,
   },
 });

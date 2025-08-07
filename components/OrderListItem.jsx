@@ -54,7 +54,6 @@ const OrderListItem = ({ orderItem }) => {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         orderItem={orderItem}
-
       />
     </TouchableOpacity>
   );
