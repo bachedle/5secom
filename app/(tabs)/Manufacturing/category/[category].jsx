@@ -1,16 +1,22 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'react-native';
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import OrderListItem from '../../../../components/OrderListItem';
 import OrderItem from '../../../../assets/data/orderList.json';
-import AcceptedList from '../../../../assets/data/acceptedList.json'
+import axios from 'axios';
+import AcceptedList from '../../../../assets/data/acceptedList.json';
+import ModalFilter from '../../../../components/modalFilter'
 
 
 const ManufacturingListPage = () => {
   const { label } = useLocalSearchParams();
   const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [order, setOrder] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
 
   const filteredOrders = OrderItem.filter(order => order.label === label);
 
@@ -53,8 +59,18 @@ const ManufacturingListPage = () => {
           onChangeText={setSearchText}
           style={styles.SEARCH_INPUT}
         />
-        <TouchableOpacity style={styles.FILTER_BUTTON}>
+        <TouchableOpacity 
+          style={styles.FILTER_BUTTON}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.8}>
           <MaterialIcons name="tune" size={20} color="#A34025" />
+          <ModalFilter
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            orderItem={order}
+          >
+
+          </ModalFilter>
         </TouchableOpacity>
       </View>
 
