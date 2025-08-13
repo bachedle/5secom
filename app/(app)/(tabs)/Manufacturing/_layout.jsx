@@ -14,8 +14,7 @@ export default function ManufacturingLayout() {
     >
       {/* these will match your file names: */}
       <Stack.Screen name="index"/>
-      <Stack.Screen name="category/[category]" />
-      <Stack.Screen name="[accepted]" />
+
       {/* <Stack.Screen name="ManuList" options={{ title: 'Quản Lý Đơn' }} />
       <Stack.Screen name="ManuDetail" options={{ title: 'Chi Tiết Sản Xuất' }} /> */}
     </Stack>

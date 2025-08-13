@@ -18,7 +18,7 @@ const OrderStatusTab = () => {
   const handleCardPress = (label) => {
     router.navigate({
       pathname: 'category',
-      params: { label:label }, // Replace with actual category if needed
+      params: { label: label },
     });
   };
 
@@ -26,20 +26,33 @@ const OrderStatusTab = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Quản lý Đơn</Text>
       <View style={styles.grid}>
-        {cardData.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.card,
-              item.span ? styles.spanCard : styles.halfCard,
-            ]}
-            onPress={() => handleCardPress(item.label)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.label}>{item.label}</Text>
-            <Text style={styles.count}>{item.count}</Text>
-          </TouchableOpacity>
-        ))}
+        {cardData.map((item, index) => {
+          if (item.label === 'Đơn Mới') {
+            // Non-clickable card
+            return (
+              <View
+                key={index}
+                style={[styles.card, item.span ? styles.spanCard : styles.halfCard]}
+              >
+                <Text style={styles.label}>{item.label}</Text>
+                <Text style={styles.count}>{item.count}</Text>
+              </View>
+            );
+          }
+
+          // Clickable card
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[styles.card, item.span ? styles.spanCard : styles.halfCard]}
+              onPress={() => handleCardPress(item.label)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.label}>{item.label}</Text>
+              <Text style={styles.count}>{item.count}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );

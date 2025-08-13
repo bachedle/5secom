@@ -33,7 +33,7 @@ useFocusEffect(
     // if (!isValid)
     //   return;
     // Handle login logic
-    router.push('(tabs)');
+    router.replace('(tabs)');
   };
 
   //validate login credentials

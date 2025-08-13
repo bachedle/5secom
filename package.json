@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@react-native-community/checkbox": "^0.5.20",
+    "@react-native-community/datetimepicker": "8.4.1",
+    "@react-native-picker/picker": "2.11.1",
     "axios": "^1.11.0",
     "base-64": "^1.0.0",
     "expo": "~53.0.20",
@@ -24,12 +26,11 @@
     "expo-status-bar": "~2.2.3",
     "jsqr": "^1.4.0",
     "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-native": "0.79.5",
+    "react-native-dotenv": "^3.4.11",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
-    "@react-native-picker/picker": "2.11.1",
-    "@react-native-community/datetimepicker": "8.4.1",
-    "react-dom": "19.0.0",
     "react-native-web": "^0.20.0"
   },
   "devDependencies": {

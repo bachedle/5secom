@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import React from 'react';
-import OrderStatusTab from '../../components/OrderStatusTab';
+import OrderStatusTab from '../../../components/OrderStatusTab';
 
 const HomePage = () => {
   return (

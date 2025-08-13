@@ -1,13 +1,12 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { useState } from 'react';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import AcceptedList from '../../../assets/data/acceptedList.json';
-import OrderListItem from '../../../components/OrderListItem';
-import ModalFilter from '../../../components/modalFilter';
+import { useRouter } from 'expo-router';
+import AcceptedList from '../../assets/data/acceptedList.json';
+import OrderListItem from '../../components/OrderListItem'; // ✅ Import the component, not JSON
+import ModalFilter from '../../components/modalFilter';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 const AcceptedOrderPage = () => {
-  const { label } = useLocalSearchParams();
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,8 +25,10 @@ const AcceptedOrderPage = () => {
       (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
+
     const statusMatch = selectedStatus ? order.label === selectedStatus : true;
     const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
+
     return searchMatch && statusMatch && dateMatch;
   });
 
@@ -53,7 +54,8 @@ const AcceptedOrderPage = () => {
         <TouchableOpacity
           style={styles.FILTER_BUTTON}
           onPress={() => setModalVisible(true)}
-          activeOpacity={0.8}>
+          activeOpacity={0.8}
+        >
           <MaterialIcons name="tune" size={20} color="#A34025" />
         </TouchableOpacity>
       </View>
@@ -62,8 +64,9 @@ const AcceptedOrderPage = () => {
       <FlatList
         data={filteredOrders}
         keyExtractor={(item) => item.orderId}
-        renderItem={({ item }) => <OrderListItem orderItem={item} />}
+        renderItem={({ item }) => <OrderListItem orderItem={item} modalType="return" />}
       />
+
 
       <ModalFilter
         visible={modalVisible}

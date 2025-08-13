@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
-import OrderStatusTab from '../../../components/OrderStatusTab'
+import OrderStatusTab from '../../../../components/OrderStatusTab'
 const Manufacturing = () => {
   return (
     <View>
