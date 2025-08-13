@@ -1,13 +1,12 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { AuthContext } from '../../../utils/authContext'; // adjust path
 
 const UserPage = () => {
   const router = useRouter();
-
-  const [userImage, setUserImage] = useState(image || null);
+  const { logOut } = useContext(AuthContext); // 🔹 get logOut from context
 
   const {
     username,
@@ -18,16 +17,18 @@ const UserPage = () => {
     birthdate,
     password,
   } = useLocalSearchParams();
-  
+
+  const [userImage, setUserImage] = useState(image || null);
+
   useEffect(() => {
     if (image) {
       setUserImage(image);
     }
   }, [image]);
 
-
   const handleLogout = () => {
-    router.dismissAll(); // Replace with real logout logic
+    logOut(); // update auth state
+    router.replace('/SignIn'); // go back to sign-in screen
   };
 
   const handleEdit = () => {
@@ -43,7 +44,6 @@ const UserPage = () => {
         password,
       },
     });
-    console.log(image)
   };
 
   return (
@@ -62,13 +62,11 @@ const UserPage = () => {
             <MaterialCommunityIcons name="account" size={100} color="#ccc" />
           </View>
         )}
-
       </View>
 
       {/* Content */}
       <View style={styles.contentWrapper}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Username */}
           <Text style={styles.username}>{username || 'Username'}</Text>
           <Text style={styles.role}>Role: ABCXYZ</Text>
 
@@ -81,13 +79,13 @@ const UserPage = () => {
             <InfoRow label="Số Điện Thoại" value={phone} />
           </View>
 
-          {/* Settings Row */}
+          {/* Settings */}
           <TouchableOpacity style={styles.settingsRow} onPress={handleEdit}>
             <Text style={styles.settingsText}>Cài Đặt</Text>
             <Text style={styles.arrow}>›</Text>
           </TouchableOpacity>
 
-          {/* Logout Button */}
+          {/* Logout */}
           <TouchableOpacity style={styles.signInButton} onPress={handleLogout}>
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
@@ -105,6 +103,8 @@ const InfoRow = ({ label, value }) => (
 );
 
 export default UserPage;
+
+
 
 const styles = StyleSheet.create({
   background: {
