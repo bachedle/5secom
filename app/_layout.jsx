@@ -1,12 +1,21 @@
-import { Slot, Redirect, usePathname } from 'expo-router';
+import { Stack } from 'expo-router';
+import { AuthProvider } from '../utils/authContext';
 
-export default function SignInLayout() {
-  const session = true;
-  const pathname = usePathname();
+export const unstable_settings = {
+  initialRouteName: 'index',
+};
 
-  if (!session && pathname !== '/SignIn') {
-    return <Redirect href="/SignIn" />;
-  }
-
-  return <Slot />;
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <Stack
+        screenOptions={{
+            headerShown: false, // default: no headers
+        }}
+        >
+            <Stack.Screen name="(app)" />
+        </Stack>
+    </AuthProvider>
+    
+  );
 }

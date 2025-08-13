@@ -1,71 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TextInput,
-  Image,
   TouchableOpacity,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
-import { useCallback } from 'react';
+import { AuthContext } from '../utils/authContext'; // adjust path to where your authContext is
 
 const LoginPage = () => {
   const router = useRouter();
+  const { logIn } = useContext(AuthContext); // get logIn from AuthContext
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-useFocusEffect(
-  useCallback(() => {
-    // Clear all input when navigating back to login
-    setEmail('');
-    setPassword('');
-    setRememberMe(false);
-  }, [])
-);
+  useFocusEffect(
+    useCallback(() => {
+      // Clear inputs when returning to login
+      setEmail('');
+      setPassword('');
+      setRememberMe(false);
+    }, [])
+  );
 
   const handleLogin = () => {
+    // if (!validateLogin()) return;
 
-    // const isValid = validateLogin();
-    // if (!isValid)
-    //   return;
-    // Handle login logic
+    // 1️⃣ Call your backend login API here (later)
+    // 2️⃣ If successful, call logIn() to update auth state
+    logIn();
+
+    // 3️⃣ Navigate to main app
     router.replace('(tabs)');
   };
 
-  //validate login credentials
-const validateLogin = () => {
-  if (!email || !password) {
-    alert('Hãy nhập email và mật khẩu');
-    return false;
-  }
+  const validateLogin = () => {
+    if (!email || !password) {
+      alert('Hãy nhập email và mật khẩu');
+      return false;
+    }
 
-  if (!email.includes('@')) {
-    alert('Email không hợp lệ');
-    return false;
-  }
+    if (!email.includes('@')) {
+      alert('Email không hợp lệ');
+      return false;
+    }
 
-  // Sample password validation
-  if (!email.includes('5secom') || password !== '123456') {
-    alert('Email hoặc mật khẩu không đúng');
-    return false;
-  }
+    if (!email.includes('5secom') || password !== '123456') {
+      alert('Email hoặc mật khẩu không đúng');
+      return false;
+    }
 
-  return true;
-};
-
-
-
+    return true;
+  };
 
   return (
     <View style={styles.container}>
-      {/* <Image
-        source={require('../assets/logo.png')} // Replace with your logo path
-        style={styles.logo}
-      /> */}
       <Text style={styles.brand}>5SEcom</Text>
       <Text style={styles.welcome}>Welcome Back!</Text>
 
