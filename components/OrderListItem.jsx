@@ -8,54 +8,64 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import ModalTest from '../components/modalTest';
+import ModalAccepted from '../components/modalAccepted'
 
-const OrderListItem = ({ orderItem }) => {
+const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  // const router = useRouter();
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => setModalVisible(true)}
-      activeOpacity={0.8}
-    >
-      {/* Card Header */}
-      <View style={styles.header}>
-        <Text style={styles.orderId}>{orderItem.orderId}</Text>
-        <Text style={styles.favorite}>
-          {orderItem.isFavorite ? '★' : '☆'}
-        </Text>
-      </View>
-
-      {/* Date / Time */}
-      <Text style={styles.dateTime}>{orderItem.dateTime}</Text>
-
-      {/* Main Row */}
-      <View style={styles.row}>
-        <View style={styles.info}>
-          <Text style={styles.sku}>{orderItem.sku}</Text>
-          <Text>
-            Sản Phẩm: <Text style={styles.bold}>{orderItem.productName}</Text>
+    <>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => setModalVisible(true)}
+        activeOpacity={0.8}
+      >
+        {/* Card Header */}
+        <View style={styles.header}>
+          <Text style={styles.orderId}>{orderItem.orderId}</Text>
+          <Text style={styles.favorite}>
+            {orderItem.isFavorite ? '★' : ''}
           </Text>
-          <Text>Ngày Cập Nhật: {orderItem.updateDate}</Text>
         </View>
-        <View style={styles.right}>
-          <Text style={styles.qty}>{orderItem.quantity}</Text>
+
+        {/* Date / Time */}
+        <Text style={styles.dateTime}>{orderItem.dateTime}</Text>
+
+        {/* Main Row */}
+        <View style={styles.row}>
+          <View style={styles.info}>
+            <Text style={styles.sku}>{orderItem.sku}</Text>
+            <Text>
+              Sản Phẩm: <Text style={styles.bold}>{orderItem.productName}</Text>
+            </Text>
+            <Text>Ngày Cập Nhật: {orderItem.updateDate}</Text>
+          </View>
+          <View style={styles.right}>
+            <Text style={styles.qty}>{orderItem.quantity}</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Label Tag */}
-      <View style={styles.labelTag}>
-        <Text style={styles.labelText}>{orderItem.label}</Text>
-      </View>
+        {/* Label Tag */}
+        <View style={styles.labelTag}>
+          <Text style={styles.labelText}>{orderItem.label}</Text>
+        </View>
+      </TouchableOpacity>
 
-      {/* Delegate Modal display to ModalTest */}
-      <ModalTest
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        orderItem={orderItem}
-      />
-    </TouchableOpacity>
+      {/* Render the correct modal based on modalType */}
+      {modalType === 'receive' ? (
+        <ModalTest
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          orderItem={orderItem}
+        />
+      ) : (
+        <ModalAccepted
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          orderItem={orderItem}
+        />
+      )}
+    </>
   );
 };
 

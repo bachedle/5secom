@@ -119,14 +119,14 @@ const AddGuestInfo = () => {
       </TouchableWithoutFeedback>
 
       {/* FOOTER BUTTONS */}
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleBack}>
-              <Text style={styles.cancelText}>Quay Lại</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.confirmButton} onPress={handleNext}>
-              <Text style={styles.confirmText}>Tiếp Theo</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.cancelButton} onPress={handleBack}>
+          <Text style={styles.cancelText}>Quay Lại</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.confirmButton} onPress={handleNext}>
+          <Text style={styles.confirmText}>Tiếp Theo</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -136,23 +136,27 @@ export default AddGuestInfo;
 const styles = StyleSheet.create({
   header: {
     backgroundColor: '#fff',
-    height: 100,
     paddingTop: 50,
+    paddingBottom: 16,
     paddingHorizontal: 20,
     borderBottomColor: '#eee',
     borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   headerText: {
     fontSize: 22,
     fontWeight: 'bold',
   },
-  contentWrapper: {
+contentWrapper: {
     backgroundColor: 'white',
     borderRadius: 8,
     margin: 10,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    paddingBottom: 80, // so scroll content won't hide behind footer
+    paddingBottom: 100
   },
   title: {
     fontSize: 20,
@@ -174,17 +178,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     backgroundColor: '#fff',
   },
-  footer: {
+footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    position: 'absolute',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+
+    padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
     backgroundColor: '#fff',
-    bottom: 50,
-    width:'100%'
+    bottom: 50, // ✅ stick to bottom instead of 50px up
   },
   confirmButton: {
     backgroundColor: '#dd6b4d',

@@ -13,70 +13,68 @@ import {
 import { useState, useEffect } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
-import OrderListItem from '../components/OrderListItem';
-import OrderItem from '../assets/data/orderList.json';
-import AcceptedList from '../assets/data/acceptedList.json';
+import OrderListItem from '../../../components/OrderListItem';
+import AcceptedList from '../../../assets/data/acceptedList.json';
+import ModalFilter from '../../../components/modalFilter';
 
-const ManufacturingListPage = () => {
+
+const ProductListPage = () => {
   const { label } = useLocalSearchParams();
   const router = useRouter();
 
-  const [order, setOrder] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [deliveryDate, setDeliveryDate] = useState(null);
+
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+
+    const handleStatusFilterChange = (status) => setSelectedStatus(status);
+  const handleDateFilterChange = (date) => setSelectedDate(date);
+
+  const filteredOrders = AcceptedList.filter(order => {
+    const searchMatch =
+      (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
+    const statusMatch = selectedStatus ? order.label === selectedStatus : true;
+    const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
+    return searchMatch && statusMatch && dateMatch;
+  });
 
   const handleBack = () => {
     router.dismiss();
   };
 
   const handleNavigateTo2ndPage = () => {
-    router.push({
-      pathname: '(tabs)/Manufacturing/[accepted].jsx',
-      params: { label: label },
+    router.navigate({
+      pathname: 'AddStoreInfo',
     });
   };
 
-  const handleDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) setDeliveryDate(selectedDate);
-  };
 
-  const confirmFilter = () => {
-    // You can apply date filtering logic here
-    setModalVisible(false);
-  };
+  // const filteredOrders = OrderItem.filter((order) => {
+  //   const matchesLabel = order.label === label;
+  //   const matchesSearch =
+  //     searchText === '' ||
+  //     order.name?.toLowerCase().includes(searchText.toLowerCase());
 
-  const clearFilter = () => {
-    setDeliveryDate(null);
-    setModalVisible(false);
-  };
+  //   const matchesDate =
+  //     !deliveryDate ||
+  //     new Date(order.deliveryDate).toDateString() ===
+  //       new Date(deliveryDate).toDateString();
 
-  const filteredOrders = OrderItem.filter((order) => {
-    const matchesLabel = order.label === label;
-    const matchesSearch =
-      searchText === '' ||
-      order.name?.toLowerCase().includes(searchText.toLowerCase());
-
-    const matchesDate =
-      !deliveryDate ||
-      new Date(order.deliveryDate).toDateString() ===
-        new Date(deliveryDate).toDateString();
-
-    return matchesLabel && matchesSearch && matchesDate;
-  });
+  //   return matchesLabel && matchesSearch && matchesDate;
+  // });
 
   return (
     <View style={styles.CONTAINER}>
       {/* Header */}
       <View style={styles.HEADER}>
-        <TouchableOpacity onPress={handleBack}>
+        {/* <TouchableOpacity onPress={handleBack}>
           <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.HEADER_TITLE}>{label}</Text>
+        </TouchableOpacity> */}
+        <Text style={styles.HEADER_TITLE}>Danh sách đơn</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -86,10 +84,8 @@ const ManufacturingListPage = () => {
           style={styles.ACTIVE_TAB}
           onPress={handleNavigateTo2ndPage}
         >
-          <Text style={styles.ACTIVE_TAB_TEXT}>Đã nhận</Text>
-          <View style={styles.TAB_BADGE}>
-            <Text style={styles.BADGE_TEXT}>{AcceptedList.length}</Text>
-          </View>
+          <Text style={styles.ACTIVE_TAB_TEXT}>Tạo đơn mới</Text>
+
         </TouchableOpacity>
       </View>
 
@@ -110,60 +106,15 @@ const ManufacturingListPage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Filter Modal */}
-      <Modal
+      <ModalFilter
         visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          style={styles.overlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={styles.modalBox}>
-            <View style={styles.header}>
-              <Text style={styles.title}>Tìm kiếm nâng cao</Text>
-              <Pressable onPress={() => setModalVisible(false)} hitSlop={8}>
-                <Text style={styles.closeText}>✕</Text>
-              </Pressable>
-            </View>
+        onClose={() => setModalVisible(false)}
+        selectedStatus={selectedStatus}
+        selectedDate={selectedDate}
+        onStatusFilterChange={handleStatusFilterChange}
+        onDateFilterChange={handleDateFilterChange}
+      />
 
-            <Text style={styles.label}>Ngày giao</Text>
-            <Pressable
-              style={styles.dateButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.dateText}>
-                {deliveryDate
-                  ? deliveryDate.toLocaleDateString()
-                  : 'Chọn ngày giao'}
-              </Text>
-            </Pressable>
-            {showDatePicker && (
-              <DateTimePicker
-                value={deliveryDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-              />
-            )}
-
-            <View style={styles.buttonRow}>
-              <Pressable style={styles.filledButton} onPress={confirmFilter}>
-                <Text style={styles.filledText}>Xác Nhận</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.filledButton, styles.resetButton]}
-                onPress={clearFilter}
-              >
-                <Text style={styles.resetText}>Xóa Bộ Lọc</Text>
-              </Pressable>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
 
       {/* Order List */}
       <FlatList
@@ -176,7 +127,7 @@ const ManufacturingListPage = () => {
   );
 };
 
-export default ManufacturingListPage;
+export default ProductListPage;
 
 
 const styles = StyleSheet.create({
@@ -187,14 +138,15 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   HEADER: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    // flexDirection: 'row',
+    // justifyContent: 'space-between',
+    // alignItems: 'center',
     marginBottom: 12,
   },
   HEADER_TITLE: {
     fontSize: 20,
     fontWeight: 'bold',
+    textAlign: 'center'
   },
   STATUS_TABS: {
     flexDirection: 'row',

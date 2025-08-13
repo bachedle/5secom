@@ -55,7 +55,6 @@ const AddOrderInfo = () => {
         const { uri, width, height } = result.assets[0];
         setImage(uri);
         setImgRatio(width / height);
-
     }
   };
 
@@ -217,12 +216,13 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
   },
-  contentWrapper: {
+contentWrapper: {
     backgroundColor: 'white',
     borderRadius: 8,
-    paddingBottom: 60,
+    margin: 10,
     paddingVertical: 20,
     paddingHorizontal: 20,
+    paddingBottom: 100
   },
   title: {
     fontSize: 20,
