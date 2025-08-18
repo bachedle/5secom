@@ -57,7 +57,15 @@ export function AuthProvider({ children }) {
           password,
       });
 
-      const response = await axios.post(`${API}/oauth2/token`, params, { headers: { "Content-Type": "application/x-www-form-urlencoded" }});
+      const formData = new FormData()
+      formData.append('client_secret',CLIENT_SECRET)
+      formData.append('client_id',CLIENT_ID)
+      formData.append('grant_type','password')
+      formData.append('username', username)
+      formData.append('password', password)
+      formData.append('scope', 'read write')
+
+      const response = await axios.post(`${API}/oauth2/token`, formData, { headers: { "Content-Type": "multipart/form-data" }});
       const data = response.data;
       
       const authToken = data.access_token;
