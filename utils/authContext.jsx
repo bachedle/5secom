@@ -1,172 +1,124 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { api } from './api'; 
+import axios from 'axios';
+
+const API = 'https://5secom.dientoan.vn/api';
+const CLIENT_ID = 'dichtetayninh';
+const CLIENT_SECRET = 'AVTaQ7vJes38oseonKqt';
 
 export const AuthContext = createContext({
   isLoggedIn: false,
-  logIn: () => {},
-  logOut: () => {},
+  user: null,
   token: null,
   loading: true,
-  refreshToken: () => {},
-  getRefreshToken: () => {},
+  error: null,
+  logIn: async () => {},
+  logOut: () => {},
 });
 
 export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadToken = async () => {
+    const loadStoredAuth = async () => {
       try {
-        console.log('🔍 Loading stored token...');
+        const storedToken = await SecureStore.getItemAsync('authToken');
+        const storedUser = await SecureStore.getItemAsync('user');
         
-        // Load access token from secure storage
-        const accessToken = await SecureStore.getItemAsync('access_token');
-        
-        if (accessToken) {
-          console.log('✅ Token found in storage');
-          
-          // TODO: Optionally verify token is still valid by calling an API endpoint
-          // You can uncomment this when you have a profile endpoint working
-          /*
-          try {
-            await api.getProfile();
-            console.log('✅ Token is valid');
-          } catch (error) {
-            console.log('❌ Token is invalid, trying to refresh...');
-            const refreshed = await refreshToken();
-            if (!refreshed) {
-              throw new Error('Token refresh failed');
-            }
-          }
-          */
-          
-          setToken(accessToken);
+        if (storedToken && storedUser) {
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
           setIsLoggedIn(true);
-        } else {
-          console.log('ℹ️ No token found in storage');
         }
       } catch (error) {
-        console.error('❌ Error loading token from secure storage:', error);
-        // If there's an error loading, clear any invalid state
-        await logOut();
+        console.error('Error loading stored auth:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadToken();
+    loadStoredAuth();
   }, []);
 
-  const logIn = async (newToken) => {
+  const logIn = async (username, password) => {
     try {
-      console.log('📝 Storing new token...');
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams({
+          grant_type: 'password',
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          username,
+          password,
+      });
+
+      const response = await axios.post(`${API}/oauth2/token`, params, { headers: { "Content-Type": "application/x-www-form-urlencoded" }});
+      const data = response.data;
       
-      // Store token securely
-      await SecureStore.setItemAsync('access_token', newToken);
+      const authToken = data.access_token;
+      const userData = data.user || { username };
       
-      setToken(newToken);
+      await SecureStore.setItemAsync('authToken', authToken);
+      await SecureStore.setItemAsync('user', JSON.stringify(userData));
+      
+      setToken(authToken);
+      setUser(userData);
       setIsLoggedIn(true);
       
-      console.log('✅ User logged in successfully');
-    } catch (error) {
-      console.error('❌ Error storing token:', error);
-      throw error; // Re-throw so login component can handle it
+      return { success: true };
+    } catch (err) {
+      const errorMessage = err.response?.data?.error_description || 
+                          err.response?.data?.message || 
+                          err.message || 
+                          'Login failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
     }
   };
 
   const logOut = async () => {
     try {
-      console.log('🚪 Logging out user...');
-      
-      // Use the api helper to clear tokens
-      await api.logout();
+      await SecureStore.deleteItemAsync('authToken');
+      await SecureStore.deleteItemAsync('user');
       
       setToken(null);
+      setUser(null);
       setIsLoggedIn(false);
-      
-      console.log('✅ User logged out successfully');
+      setError(null);
     } catch (error) {
-      console.error('❌ Error during logout:', error);
-      // Even if secure storage fails, clear the app state
-      setToken(null);
-      setIsLoggedIn(false);
+      console.error('Error during logout:', error);
     }
   };
 
-  // Helper function to get refresh token
-  const getRefreshToken = async () => {
-    try {
-      const refreshToken = await SecureStore.getItemAsync('refresh_token');
-      return refreshToken;
-    } catch (error) {
-      console.error('❌ Error getting refresh token:', error);
-      return null;
-    }
-  };
-
-  // Function to refresh access token using our axios helper
-  const refreshToken = async () => {
-    try {
-      console.log('🔄 Attempting to refresh token...');
-      
-      const refreshed = await api.refreshToken();
-      
-      if (refreshed) {
-        // Get the new token from storage
-        const newToken = await SecureStore.getItemAsync('access_token');
-        setToken(newToken);
-        setIsLoggedIn(true);
-        
-        console.log('✅ Token refreshed successfully');
-        return true;
-      } else {
-        throw new Error('Token refresh failed');
-      }
-    } catch (error) {
-      console.error('❌ Token refresh failed:', error);
-      
-      // Force logout if refresh fails
-      await logOut();
-      throw error;
-    }
-  };
-
-  // Helper to check if user is authenticated and token is valid
-  const checkAuthStatus = async () => {
-    if (!token) return false;
-    
-    try {
-      // Try to make an authenticated request
-      await api.getProfile();
-      return true;
-    } catch (error) {
-      console.log('🔄 Token invalid, trying to refresh...');
-      try {
-        return await refreshToken();
-      } catch (refreshError) {
-        console.log('❌ Refresh failed, user needs to login');
-        return false;
-      }
-    }
+  const value = {
+    isLoggedIn,
+    user,
+    token,
+    loading,
+    error,
+    logIn,
+    logOut,
   };
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        isLoggedIn, 
-        logIn, 
-        logOut, 
-        token, 
-        loading, 
-        refreshToken,
-        getRefreshToken,
-        checkAuthStatus,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
+
+// Custom hook for using auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

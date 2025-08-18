@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,208 +6,94 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
-import { AuthContext } from '../utils/authContext';
-import { api } from '../utils/api';
+import { useAuth } from '../utils/authContext';
 
 const LoginPage = () => {
   const router = useRouter();
-  const { logIn } = useContext(AuthContext);
+  const { logIn, loading, error } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Test server connection on component mount
-  useEffect(() => {
-    const testConnection = async () => {
-      try {
-        await api.testConnection();
-        setDebugInfo('✅ Server connection test passed');
-      } catch (error) {
-        setDebugInfo(`❌ Server connection failed: ${error.message}`);
-      }
-    };
-    
-    if (__DEV__) {
-      testConnection();
-    }
-  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setEmail('');
+      console.log('🔄 LoginPage: Clearing inputs on focus');
+      setUsername('');
       setPassword('');
       setRememberMe(false);
     }, [])
   );
 
   const handleLogin = async () => {
+    console.log('🚀 LoginPage: Sign In button pressed');
+    console.log('📝 LoginPage: Username:', username);
+    console.log('📝 LoginPage: Password:', password ? '***HIDDEN***' : 'EMPTY');
+    
     if (!validateLogin()) return;
 
-    setLoading(true);
-    setDebugInfo('Starting login process...');
+    console.log('✅ LoginPage: Validation passed, calling API...');
     
-    try {
-      console.log(' Starting login process...');
-      
-      // Use the axios-based login function
-      const data = await api.login(email, password);
-      
-      console.log('✅ Login successful, received tokens');
-      setDebugInfo('✅ Login successful, processing tokens...');
+    const result = await logIn(username, password);
+    
+    console.log('📦 LoginPage: API result:', result);
 
-      // Check if we received the required tokens
-      if (data.access_token) {
-        // Store tokens securely
-        await SecureStore.setItemAsync('access_token', data.access_token);
-
-        // Store refresh token if available and remember me is checked
-        if (data.refresh_token && rememberMe) {
-          await SecureStore.setItemAsync('refresh_token', data.refresh_token);
-          console.log('Refresh token stored');
-          setDebugInfo('Refresh token stored');
-        }
-
-        // Update auth context
-        await logIn(data.access_token);
-        
-        setDebugInfo('✅ Login completed successfully!');
-        
-        Alert.alert('Success', 'Login successful!', [
-          { text: 'OK', onPress: () => router.replace('(tabs)') }
-        ]);
-      } else {
-        setDebugInfo('❌ No access token in server response');
-        Alert.alert('Error', 'No access token received from server');
-      }
-    } catch (error) {
-      console.error('❌ Login error:', error);
-      setDebugInfo(`❌ Login failed: ${error.message}`);
-      
-      // Show detailed error information
-      let errorTitle = 'Login Error';
-      let errorMessage = error.message;
-      
-      // Provide helpful suggestions based on error type
-      if (error.message.includes('Invalid client credentials')) {
-        errorMessage += '\n\nCheck your CLIENT_ID and CLIENT_SECRET in the .env file';
-      } else if (error.message.includes('Invalid email or password')) {
-        errorMessage += '\n\nPlease check your login credentials';
-      } else if (error.message.includes('Network error')) {
-        errorMessage += '\n\nCheck your internet connection and server status';
-      }
-      
-      Alert.alert(errorTitle, errorMessage);
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      console.log('✅ LoginPage: Login successful, navigating to tabs');
+      router.replace('(tabs)');
+    } else {
+      console.log('❌ LoginPage: Login failed:', result.error);
+      Alert.alert('Login Failed', result.error || 'Something went wrong');
     }
   };
 
   const validateLogin = () => {
-    if (!email?.trim() || !password?.trim()) {
-      Alert.alert('Validation Error', 'Please enter both email and password');
+    console.log('🔍 LoginPage: Validating login inputs');
+    
+    if (!username || !password) {
+      console.log('❌ LoginPage: Validation failed - missing username or password');
+      Alert.alert('Validation Error', 'Hãy nhập username và mật khẩu');
       return false;
     }
-    
-    if (password.length < 6) {
-      Alert.alert('Validation Error', 'Password must be at least 6 characters');
-      return false;
-    }
-    
+
+    console.log('✅ LoginPage: Validation passed');
     return true;
   };
 
-  // Test server connectivity
-  const testServerConnection = async () => {
-    setLoading(true);
-    setDebugInfo('🔍 Testing server connection...');
-    
-    try {
-      await api.testConnection();
-      setDebugInfo('✅ Server connection test passed');
-      Alert.alert('Success', 'Server is reachable!');
-    } catch (error) {
-      setDebugInfo(`❌ Server test failed: ${error.message}`);
-      Alert.alert('Connection Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Test different OAuth2 formats
-  const testOAuthVariations = async () => {
-    if (!email || !password) {
-      Alert.alert('Missing Credentials', 'Please enter email and password first');
-      return;
-    }
-    
-    setLoading(true);
-    setDebugInfo('🧪 Testing different OAuth2 formats...');
-    
-    try {
-      const result = await api.testOAuthVariations(email, password);
-      
-      if (result.success) {
-        setDebugInfo(`✅ Found working format: ${result.variation}`);
-        Alert.alert('Success!', `Working OAuth2 format found: ${result.variation}`, [
-          { 
-            text: 'Use This Format', 
-            onPress: async () => {
-              // Store the successful tokens if available
-              if (result.data.access_token) {
-                await SecureStore.setItemAsync('access_token', result.data.access_token);
-                if (result.data.refresh_token && rememberMe) {
-                  await SecureStore.setItemAsync('refresh_token', result.data.refresh_token);
-                }
-                await logIn(result.data.access_token);
-                router.replace('(tabs)');
-              }
-            }
-          },
-          { text: 'OK', style: 'cancel' }
-        ]);
-      } else {
-        setDebugInfo(`❌ All OAuth2 formats failed: ${result.message}`);
-        Alert.alert('All Formats Failed', result.message);
-      }
-    } catch (error) {
-      setDebugInfo(`❌ OAuth2 testing failed: ${error.message}`);
-      Alert.alert('Test Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
       <Text style={styles.brand}>5SEcom</Text>
       <Text style={styles.welcome}>Welcome Back!</Text>
 
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
       <TextInput
-        placeholder="Email"
+        placeholder="Username"
         style={styles.input}
-        value={email}
-        onChangeText={(text) => setEmail(text.trim())}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
+        value={username}
+        onChangeText={(text) => {
+          console.log('📝 LoginPage: Username input changed:', text);
+          setUsername(text);
+        }}
         editable={!loading}
       />
-      
       <TextInput
         placeholder="Password"
         secureTextEntry
         style={styles.input}
         value={password}
-        onChangeText={setPassword}
-        autoCapitalize="none"
-        autoComplete="current-password"
+        onChangeText={(text) => {
+          console.log('📝 LoginPage: Password input changed:', text ? '***HIDDEN***' : 'EMPTY');
+          setPassword(text);
+        }}
         editable={!loading}
       />
 
@@ -220,88 +106,109 @@ const LoginPage = () => {
           <MaterialCommunityIcons
             name={rememberMe ? 'checkbox-marked' : 'checkbox-blank-outline'}
             size={22}
-            color={loading ? '#ccc' : '#dd6b4d'}
+            color="#dd6b4d"
           />
-          <Text style={[styles.rememberText, loading && styles.disabledText]}>
-            Remember me
-          </Text>
+          <Text style={styles.rememberText}>Remember me</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          onPress={() => router.push('/forgot-password')}
-          disabled={loading}
-        >
-          <Text style={[styles.forgotText, loading && styles.disabledText]}>
-            Forgot password?
-          </Text>
+        <TouchableOpacity disabled={loading}>
+          <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity 
-        style={[styles.signInButton, loading && styles.disabledButton]} 
+        style={[styles.signInButton, loading && styles.signInButtonDisabled]} 
         onPress={handleLogin}
         disabled={loading}
       >
-        <Text style={styles.signInText}>
-          {loading ? 'Signing In...' : 'Sign In'}
-        </Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.signInText}>Sign In</Text>
+        )}
       </TouchableOpacity>
-
-      {/* Debug section - only show in development */}
-
-      {/* {__DEV__ && (
-        <View style={styles.debugSection}>
-          <Text style={styles.debugTitle}>Debug Information</Text>
-          
-          {debugInfo ? (
-            <Text style={styles.debugInfo}>{debugInfo}</Text>
-          ) : null}
-          
-          <TouchableOpacity 
-            style={styles.debugButton}
-            onPress={testServerConnection}
-            disabled={loading}
-          >
-            <Text style={styles.debugButtonText}>Test Server Connection</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.debugButton}
-            onPress={testOAuthVariations}
-            disabled={loading}
-          >
-            <Text style={styles.debugButtonText}>Test OAuth2 Variations</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.debugButton}
-            onPress={() => {
-              // Clear all stored tokens for testing
-              SecureStore.deleteItemAsync('access_token');
-              SecureStore.deleteItemAsync('refresh_token');
-              setDebugInfo('🗑️ Cleared all stored tokens');
-            }}
-            disabled={loading}
-          >
-            <Text style={styles.debugButtonText}>Clear Stored Tokens</Text>
-          </TouchableOpacity>
-        </View>
-      )} */}
-    </ScrollView>
+    </View>
   );
 };
 
 export default LoginPage;
 
+// AUTH CONTEXT with console logs
+const logIn = async (username, password) => {
+  console.log('🔐 AuthContext: logIn called');
+  console.log('📝 AuthContext: Username:', username);
+  console.log('📝 AuthContext: Password:', password ? '***HIDDEN***' : 'EMPTY');
+  
+  try {
+    console.log('⏳ AuthContext: Setting loading to true');
+    setLoading(true);
+    setError(null);
+
+    const params = new URLSearchParams({
+        grant_type: 'password',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        username,
+        password,
+    });
+
+    console.log('📡 AuthContext: Making API request to:', `${API}/oauth2/token`);
+    console.log('📡 AuthContext: Request params:', {
+      grant_type: 'password',
+      client_id: CLIENT_ID,
+      client_secret: '***HIDDEN***',
+      username,
+      password: '***HIDDEN***'
+    });
+
+    const response = await axios.post(`${API}/oauth2/token`, params);
+    
+    console.log('✅ AuthContext: API request successful');
+    console.log('📦 AuthContext: Response status:', response.status);
+    console.log('📦 AuthContext: Response data:', response.data);
+    
+    const data = response.data;
+    
+    // Store token and user data securely
+    const authToken = data.access_token;
+    const userData = data.user || { username };
+    
+    console.log('💾 AuthContext: Storing token in SecureStore');
+    await SecureStore.setItemAsync('authToken', authToken);
+    await SecureStore.setItemAsync('user', JSON.stringify(userData));
+    
+    console.log('✅ AuthContext: Setting auth state');
+    setToken(authToken);
+    setUser(userData);
+    setIsLoggedIn(true);
+    
+    console.log('✅ AuthContext: Login completed successfully');
+    return { success: true };
+  } catch (err) {
+    console.log('❌ AuthContext: Login error occurred');
+    console.log('❌ AuthContext: Error details:', err);
+    console.log('❌ AuthContext: Error response:', err.response?.data);
+    console.log('❌ AuthContext: Error status:', err.response?.status);
+    
+    const errorMessage = err.response?.data?.error_description || 
+                        err.response?.data?.message || 
+                        err.message || 
+                        'Login failed';
+    
+    console.log('❌ AuthContext: Final error message:', errorMessage);
+    setError(errorMessage);
+    return { success: false, error: errorMessage };
+  } finally {
+    console.log('🔄 AuthContext: Setting loading to false');
+    setLoading(false);
+  }
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  contentContainer: {
     padding: 24,
     justifyContent: 'center',
-    minHeight: '100%',
+    backgroundColor: '#fff',
   },
   brand: {
     fontSize: 22,
@@ -314,6 +221,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 24,
+  },
+  errorContainer: {
+    backgroundColor: '#fee',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#c53030',
+    textAlign: 'center',
+    fontSize: 14,
   },
   input: {
     borderWidth: 1,
@@ -342,9 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'gray',
   },
-  disabledText: {
-    color: '#ccc',
-  },
   signInButton: {
     backgroundColor: '#dd6b4d',
     paddingVertical: 12,
@@ -352,51 +267,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  disabledButton: {
+  signInButtonDisabled: {
     backgroundColor: '#ccc',
   },
   signInText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  // Debug styles
-  debugSection: {
-    marginTop: 32,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  debugTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#333',
-  },
-  debugInfo: {
-    fontSize: 12,
-    fontFamily: 'monospace',
-    backgroundColor: '#fff',
-    padding: 8,
-    marginBottom: 12,
-    borderRadius: 4,
-    color: '#666',
-  },
-  debugButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-    alignItems: 'center',
-    marginVertical: 4,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  debugButtonText: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '500',
   },
 });
