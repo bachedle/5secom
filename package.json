@@ -23,6 +23,7 @@
     "expo-linking": "~7.1.7",
     "expo-navigation-bar": "^4.2.7",
     "expo-router": "~5.1.4",
+    "expo-secure-store": "~14.2.3",
     "expo-status-bar": "~2.2.3",
     "jsqr": "^1.4.0",
     "react": "19.0.0",

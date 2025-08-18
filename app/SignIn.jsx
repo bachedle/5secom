@@ -1,59 +1,66 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TextInput,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AuthContext } from '../utils/authContext'; // adjust path to where your authContext is
+import { useAuth } from '../utils/authContext';
 
 const LoginPage = () => {
   const router = useRouter();
-  const { logIn } = useContext(AuthContext); // get logIn from AuthContext
+  const { logIn, loading, error } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      // Clear inputs when returning to login
-      setEmail('');
+      console.log('🔄 LoginPage: Clearing inputs on focus');
+      setUsername('');
       setPassword('');
       setRememberMe(false);
     }, [])
   );
 
-  const handleLogin = () => {
-    // if (!validateLogin()) return;
+  const handleLogin = async () => {
+    console.log('🚀 LoginPage: Sign In button pressed');
+    console.log('📝 LoginPage: Username:', username);
+    console.log('📝 LoginPage: Password:', password ? '***HIDDEN***' : 'EMPTY');
+    
+    if (!validateLogin()) return;
 
-    // 1️⃣ Call your backend login API here (later)
-    // 2️⃣ If successful, call logIn() to update auth state
-    logIn();
+    console.log('✅ LoginPage: Validation passed, calling API...');
+    
+    const result = await logIn(username, password);
+    
+    console.log('📦 LoginPage: API result:', result);
 
-    // 3️⃣ Navigate to main app
-    router.replace('(tabs)');
+    if (result.success) {
+      console.log('✅ LoginPage: Login successful, navigating to tabs');
+      router.replace('(tabs)');
+    } else {
+      console.log('❌ LoginPage: Login failed:', result.error);
+      Alert.alert('Login Failed', result.error || 'Something went wrong');
+    }
   };
 
   const validateLogin = () => {
-    if (!email || !password) {
-      alert('Hãy nhập email và mật khẩu');
+    console.log('🔍 LoginPage: Validating login inputs');
+    
+    if (!username || !password) {
+      console.log('❌ LoginPage: Validation failed - missing username or password');
+      Alert.alert('Validation Error', 'Hãy nhập username và mật khẩu');
       return false;
     }
 
-    if (!email.includes('@')) {
-      alert('Email không hợp lệ');
-      return false;
-    }
-
-    if (!email.includes('5secom') || password !== '123456') {
-      alert('Email hoặc mật khẩu không đúng');
-      return false;
-    }
-
+    console.log('✅ LoginPage: Validation passed');
     return true;
   };
 
@@ -62,25 +69,39 @@ const LoginPage = () => {
       <Text style={styles.brand}>5SEcom</Text>
       <Text style={styles.welcome}>Welcome Back!</Text>
 
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
       <TextInput
-        placeholder="Email"
+        placeholder="Username"
         style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
+        value={username}
+        onChangeText={(text) => {
+          console.log('📝 LoginPage: Username input changed:', text);
+          setUsername(text);
+        }}
+        editable={!loading}
       />
       <TextInput
         placeholder="Password"
         secureTextEntry
         style={styles.input}
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => {
+          console.log('📝 LoginPage: Password input changed:', text ? '***HIDDEN***' : 'EMPTY');
+          setPassword(text);
+        }}
+        editable={!loading}
       />
 
       <View style={styles.row}>
         <TouchableOpacity
           style={styles.checkboxContainer}
           onPress={() => setRememberMe(!rememberMe)}
+          disabled={loading}
         >
           <MaterialCommunityIcons
             name={rememberMe ? 'checkbox-marked' : 'checkbox-blank-outline'}
@@ -89,13 +110,21 @@ const LoginPage = () => {
           />
           <Text style={styles.rememberText}>Remember me</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity disabled={loading}>
           <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.signInButton} onPress={handleLogin}>
-        <Text style={styles.signInText}>Sign In</Text>
+      <TouchableOpacity 
+        style={[styles.signInButton, loading && styles.signInButtonDisabled]} 
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.signInText}>Sign In</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -103,18 +132,83 @@ const LoginPage = () => {
 
 export default LoginPage;
 
+// AUTH CONTEXT with console logs
+const logIn = async (username, password) => {
+  console.log('🔐 AuthContext: logIn called');
+  console.log('📝 AuthContext: Username:', username);
+  console.log('📝 AuthContext: Password:', password ? '***HIDDEN***' : 'EMPTY');
+  
+  try {
+    console.log('⏳ AuthContext: Setting loading to true');
+    setLoading(true);
+    setError(null);
+
+    const params = new URLSearchParams({
+        grant_type: 'password',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        username,
+        password,
+    });
+
+    console.log('📡 AuthContext: Making API request to:', `${API}/oauth2/token`);
+    console.log('📡 AuthContext: Request params:', {
+      grant_type: 'password',
+      client_id: CLIENT_ID,
+      client_secret: '***HIDDEN***',
+      username,
+      password: '***HIDDEN***'
+    });
+
+    const response = await axios.post(`${API}/oauth2/token`, params);
+    
+    console.log('✅ AuthContext: API request successful');
+    console.log('📦 AuthContext: Response status:', response.status);
+    console.log('📦 AuthContext: Response data:', response.data);
+    
+    const data = response.data;
+    
+    // Store token and user data securely
+    const authToken = data.access_token;
+    const userData = data.user || { username };
+    
+    console.log('💾 AuthContext: Storing token in SecureStore');
+    await SecureStore.setItemAsync('authToken', authToken);
+    await SecureStore.setItemAsync('user', JSON.stringify(userData));
+    
+    console.log('✅ AuthContext: Setting auth state');
+    setToken(authToken);
+    setUser(userData);
+    setIsLoggedIn(true);
+    
+    console.log('✅ AuthContext: Login completed successfully');
+    return { success: true };
+  } catch (err) {
+    console.log('❌ AuthContext: Login error occurred');
+    console.log('❌ AuthContext: Error details:', err);
+    console.log('❌ AuthContext: Error response:', err.response?.data);
+    console.log('❌ AuthContext: Error status:', err.response?.status);
+    
+    const errorMessage = err.response?.data?.error_description || 
+                        err.response?.data?.message || 
+                        err.message || 
+                        'Login failed';
+    
+    console.log('❌ AuthContext: Final error message:', errorMessage);
+    setError(errorMessage);
+    return { success: false, error: errorMessage };
+  } finally {
+    console.log('🔄 AuthContext: Setting loading to false');
+    setLoading(false);
+  }
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
     justifyContent: 'center',
     backgroundColor: '#fff',
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    alignSelf: 'center',
-    marginBottom: 8,
   },
   brand: {
     fontSize: 22,
@@ -127,6 +221,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 24,
+  },
+  errorContainer: {
+    backgroundColor: '#fee',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#c53030',
+    textAlign: 'center',
+    fontSize: 14,
   },
   input: {
     borderWidth: 1,
@@ -161,6 +266,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 16,
+  },
+  signInButtonDisabled: {
+    backgroundColor: '#ccc',
   },
   signInText: {
     color: '#fff',
