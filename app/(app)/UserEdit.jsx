@@ -45,6 +45,8 @@ const UserEdit = () => {
     router.back();
   };
 
+
+  //fix 
   const handleSave = () => {
     router.replace({
       pathname: '/UserPage',
@@ -67,7 +69,7 @@ const UserEdit = () => {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker['Images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
@@ -76,6 +78,11 @@ const UserEdit = () => {
       setImage(result.assets[0].uri);
     }
   };
+
+//handle api
+  const handleUpdate = () => {
+    
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>

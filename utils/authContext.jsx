@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
-const API = 'https://5secom.dientoan.vn/api';
+export const API = 'https://5secom.dientoan.vn/api'; // Export API for other components
 const CLIENT_ID = 'dichtetayninh';
 const CLIENT_SECRET = 'AVTaQ7vJes38oseonKqt';
 
@@ -14,6 +14,9 @@ export const AuthContext = createContext({
   error: null,
   logIn: async () => {},
   logOut: () => {},
+  fetchUser: async () => {},
+  updateUser: async () => {},
+  updateImage: async () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -27,12 +30,18 @@ export function AuthProvider({ children }) {
     const loadStoredAuth = async () => {
       try {
         const storedToken = await SecureStore.getItemAsync('authToken');
-        const storedUser = await SecureStore.getItemAsync('user');
+        const storedUsername = await SecureStore.getItemAsync('username');
         
-        if (storedToken && storedUser) {
+        if (storedToken && storedUsername) {
           setToken(storedToken);
-          setUser(JSON.parse(storedUser));
           setIsLoggedIn(true);
+          
+          try {
+            await fetchUserData(storedToken, storedUsername);
+          } catch (error) {
+            console.error('Error fetching user on startup:', error);
+            await logOut();
+          }
         }
       } catch (error) {
         console.error('Error loading stored auth:', error);
@@ -44,39 +53,137 @@ export function AuthProvider({ children }) {
     loadStoredAuth();
   }, []);
 
+  // Decode JWT token to get user info
+  const decodeJWTToken = (token) => {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      
+      const payload = JSON.parse(atob(parts[1]));
+      return payload;
+    } catch (error) {
+      console.log('Could not decode JWT token');
+      return null;
+    }
+  };
+
+  // Smart filter to find current user from /user/find response
+  const findCurrentUser = (allUsers, authToken, loginUsername) => {
+    console.log(`🔍 Looking for current user among ${allUsers.length} users`);
+    
+    // Method 1: Match by login username (most reliable)
+    if (loginUsername) {
+      const userByUsername = allUsers.find(user => 
+        user.username === loginUsername
+      );
+      if (userByUsername) {
+        console.log('✅ Found user by login username:', userByUsername.username);
+        return userByUsername;
+      }
+    }
+    
+    // Method 2: Match using JWT token data
+    const jwtPayload = decodeJWTToken(authToken);
+    if (jwtPayload) {
+      console.log('🔍 JWT payload:', jwtPayload);
+      
+      const userByJWT = allUsers.find(user => {
+        // Try different possible matches
+        return (
+          (jwtPayload.user_id && user.id === jwtPayload.user_id) ||
+          (jwtPayload.id && user.id === jwtPayload.id) ||
+          (jwtPayload.sub && user.id === jwtPayload.sub) ||
+          (jwtPayload.username && user.username === jwtPayload.username) ||
+          (jwtPayload.email && user.email === jwtPayload.email)
+        );
+      });
+      
+      if (userByJWT) {
+        console.log('✅ Found user by JWT matching:', userByJWT.username);
+        return userByJWT;
+      }
+    }
+    
+    // Method 3: If API returns users in order of relevance, current user might be first
+    if (allUsers.length > 0) {
+      console.log('⚠️ Using first user as fallback - this might not be correct!');
+      console.log('First user:', allUsers[0]);
+      return allUsers[0];
+    }
+    
+    return null;
+  };
+
+  const fetchUserData = async (authToken, loginUsername = null) => {
+    try {
+      const currentToken = authToken || token;
+      if (!currentToken) throw new Error('No auth token');
+      
+      console.log('📋 Fetching all users from /user/find...');
+      
+      const response = await axios.get(`${API}/user/find`, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      
+      const allUsers = response.data.content || [];
+      console.log(`📊 Retrieved ${allUsers.length} users`);
+      
+      // Find current user from the list
+      const currentUser = findCurrentUser(allUsers, currentToken, loginUsername);
+      
+      if (!currentUser) {
+        throw new Error('Could not identify current user from the list');
+      }
+      
+      console.log('🎯 Current user identified:', currentUser.username, currentUser.email);
+      setUser(currentUser);
+      return currentUser;
+      
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  };
+
+  const fetchUser = async () => {
+    const storedUsername = await SecureStore.getItemAsync('username');
+    return await fetchUserData(token, storedUsername);
+  };
+
   const logIn = async (username, password) => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({
-          grant_type: 'password',
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
-          username,
-          password,
+      const formData = new FormData();
+      formData.append('client_secret', CLIENT_SECRET);
+      formData.append('client_id', CLIENT_ID);
+      formData.append('grant_type', 'password');
+      formData.append('username', username);
+      formData.append('password', password);
+      formData.append('scope', 'read write');
+
+      const response = await axios.post(`${API}/oauth2/token`, formData, { 
+        headers: { "Content-Type": "multipart/form-data" }
       });
-
-      const formData = new FormData()
-      formData.append('client_secret',CLIENT_SECRET)
-      formData.append('client_id',CLIENT_ID)
-      formData.append('grant_type','password')
-      formData.append('username', username)
-      formData.append('password', password)
-      formData.append('scope', 'read write')
-
-      const response = await axios.post(`${API}/oauth2/token`, formData, { headers: { "Content-Type": "multipart/form-data" }});
+      
       const data = response.data;
-      
       const authToken = data.access_token;
-      const userData = data.user || { username };
       
+      // Store both token and username for filtering
       await SecureStore.setItemAsync('authToken', authToken);
-      await SecureStore.setItemAsync('user', JSON.stringify(userData));
+      await SecureStore.setItemAsync('username', username);
       
       setToken(authToken);
-      setUser(userData);
       setIsLoggedIn(true);
+
+      try {
+        // Get current user data using username filter
+        await fetchUserData(authToken, username);
+      } catch (fetchError) {
+        console.log('Could not fetch complete user profile');
+        setUser({ username });
+      }
       
       return { success: true };
     } catch (err) {
@@ -91,10 +198,88 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUser = async (updates) => {
+    try {
+      if (!token || !user) 
+        throw new Error("Chưa xác thực");
+
+      // Clean and prepare the body according to your API schema
+      const body = {};
+      
+      if (updates.username) body.username = updates.username;
+      if (updates.credname) body.credname = updates.credname;
+      if (updates.phone) body.phone = updates.phone;
+      if (updates.email) body.email = updates.email;
+      if (updates.birthdate) body.birthdate = updates.birthdate;
+      if (updates.password) body.password = updates.password;
+
+      console.log('🔄 Updating user with:', body);
+
+      const response = await axios.patch(`${API}/user`, body, { 
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('✅ Update successful:', response.data);
+      
+      // Update user state with new data
+      setUser(response.data);
+      
+      // Also refresh from server to get complete data
+      try {
+        await fetchUser();
+      } catch (refreshError) {
+        console.log('Could not refresh user data, but update was successful');
+      }
+      
+      return { success: true, data: response.data };
+
+    } catch (error) {
+      console.error("❌ Update user failed:", error.response?.data || error.message);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || error.response?.data || error.message 
+      };
+    }
+  };
+
+  const updateImage = async (imageUri) => {
+    try {
+      if (!token || !user) 
+        throw new Error("Chưa xác thực");
+
+      const formData = new FormData();
+      formData.append('image', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'profile_image.jpg',
+      });
+
+      const response = await axios.patch(`${API}/user`, formData, { 
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setUser(response.data);
+      return { success: true, data: response.data };
+
+    } catch (error) {
+      console.error("Update image failed:", error.response?.data || error.message);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || error.response?.data || error.message 
+      };
+    }
+  };
+
   const logOut = async () => {
     try {
       await SecureStore.deleteItemAsync('authToken');
-      await SecureStore.deleteItemAsync('user');
+      await SecureStore.deleteItemAsync('username');
       
       setToken(null);
       setUser(null);
@@ -113,6 +298,9 @@ export function AuthProvider({ children }) {
     error,
     logIn,
     logOut,
+    fetchUser,
+    updateUser,
+    updateImage,
   };
 
   return (
@@ -122,7 +310,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// Custom hook for using auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
