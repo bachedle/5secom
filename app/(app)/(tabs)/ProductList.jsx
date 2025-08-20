@@ -10,7 +10,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
@@ -18,6 +18,7 @@ import OrderListItem from '../../../components/OrderListItem';
 import AcceptedList from '../../../assets/data/acceptedList.json';
 import ModalFilter from '../../../components/modalFilter';
 
+import {OrderContext} from '../../../utils/orderContext'
 
 const ProductListPage = () => {
   const { label } = useLocalSearchParams();
@@ -29,18 +30,21 @@ const ProductListPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
 
-    const handleStatusFilterChange = (status) => setSelectedStatus(status);
+  const { orders, loading } = useContext(OrderContext);
+  
+
+  const handleStatusFilterChange = (status) => setSelectedStatus(status);
   const handleDateFilterChange = (date) => setSelectedDate(date);
 
-  const filteredOrders = AcceptedList.filter(order => {
-    const searchMatch =
-      (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-      (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-      (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
-    const statusMatch = selectedStatus ? order.label === selectedStatus : true;
-    const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
-    return searchMatch && statusMatch && dateMatch;
-  });
+const filteredOrders = orders.filter(order => {
+  const searchMatch =
+    (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+    (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+    (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
+  const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
+  const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
+  return searchMatch && statusMatch && dateMatch;
+});
 
   const handleBack = () => {
     router.dismiss();
@@ -122,6 +126,7 @@ const ProductListPage = () => {
         renderItem={({ item }) => <OrderListItem orderItem={item} />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         contentContainerStyle={styles.CARDS_WRAPPER}
+        refreshing={loading}
       />
     </View>
   );

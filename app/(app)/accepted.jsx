@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'r
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import AcceptedList from '../../assets/data/acceptedList.json';
-import OrderListItem from '../../components/OrderListItem'; // ✅ Import the component, not JSON
+import OrderListItem from '../../components/OrderListItem';
 import ModalFilter from '../../components/modalFilter';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 

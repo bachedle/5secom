@@ -22,23 +22,23 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
       >
         {/* Card Header */}
         <View style={styles.header}>
-          <Text style={styles.orderId}>{orderItem.orderId}</Text>
+          <Text style={styles.orderId}>{orderItem.code || orderItem.id}</Text>
           <Text style={styles.favorite}>
             {orderItem.isFavorite ? '★' : ''}
           </Text>
         </View>
 
         {/* Date / Time */}
-        <Text style={styles.dateTime}>{orderItem.dateTime}</Text>
+        <Text style={styles.dateTime}>{orderItem.createdDate}</Text>
 
         {/* Main Row */}
         <View style={styles.row}>
           <View style={styles.info}>
-            <Text style={styles.sku}>{orderItem.sku}</Text>
+            <Text style={styles.sku}>{orderItem.skuOpt?.code || 'N/A'}</Text>
             <Text>
-              Sản Phẩm: <Text style={styles.bold}>{orderItem.productName}</Text>
+              Sản Phẩm: <Text style={styles.bold}>{orderItem.name}</Text>
             </Text>
-            <Text>Ngày Cập Nhật: {orderItem.updateDate}</Text>
+            <Text>Ngày Cập Nhật: {orderItem.updatedDate || orderItem.createdDate}</Text>
           </View>
           <View style={styles.right}>
             <Text style={styles.qty}>{orderItem.quantity}</Text>
@@ -47,7 +47,7 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
 
         {/* Label Tag */}
         <View style={styles.labelTag}>
-          <Text style={styles.labelText}>{orderItem.label}</Text>
+      <Text style={styles.labelText}>{orderItem.facilityType?.name}</Text>
         </View>
       </TouchableOpacity>
 
