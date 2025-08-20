@@ -10,7 +10,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,11 +19,13 @@ import OrderListItem from '../../components/OrderListItem';
 import OrderItem from '../../assets/data/orderList.json';
 import AcceptedList from '../../assets/data/acceptedList.json';
 
+import { OrderContext } from '../../utils/orderContext';
+
 const ManufacturingListPage = () => {
   const { label } = useLocalSearchParams();
   const router = useRouter();
 
-  const [order, setOrder] = useState([]);
+  const {orders, loading} = useContext(OrderContext);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -55,7 +57,7 @@ const ManufacturingListPage = () => {
     setModalVisible(false);
   };
 
-  const filteredOrders = OrderItem.filter((order) => {
+  const filteredOrders = orders.filter((order) => {
     const matchesLabel = order.label === label;
     const matchesSearch =
       searchText === '' ||
