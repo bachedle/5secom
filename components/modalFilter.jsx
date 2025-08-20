@@ -18,6 +18,7 @@ const ModalFilter = ({
   selectedDate,
   onStatusFilterChange,
   onDateFilterChange,
+  facilityTypes = [],
 }) => {
   const [selectedOrder, setSelectedOrder] = useState(selectedStatus || '');
   const [deliveryDate, setDeliveryDate] = useState(selectedDate || null);
@@ -63,13 +64,13 @@ const ModalFilter = ({
           >
 
             {/* lấy từ option group */}
-            <Picker.Item label="Tất cả" value="" />
-            <Picker.Item label="Vẽ 2D" value="Vẽ 2D" />
-            <Picker.Item label="Chưa Có Hình" value="Chưa Có Hình" />
-            <Picker.Item label="Thêu" value="Thêu" />
-            <Picker.Item label="Cắt Laser" value="Cắt Laser" />
-            <Picker.Item label="Sản Xuất" value="Sản Xuất" />
-            <Picker.Item label="Đóng gói" value="Đóng gói" />
+            <Picker.Item label= "Tất cả" value=""/>
+            {[...facilityTypes] 
+              .sort((a, b) => a.orderNo - b.orderNo) 
+              .map((ft) => (
+                <Picker.Item key={ft.id} label={ft.name} value={ft.name} />
+            ))}
+
           </Picker>
 
           {/* Delivery Date Picker */}

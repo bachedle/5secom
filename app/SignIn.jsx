@@ -22,7 +22,6 @@ const LoginPage = () => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('🔄 LoginPage: Clearing inputs on focus');
       setUsername('');
       setPassword('');
       setRememberMe(false);
@@ -30,37 +29,22 @@ const LoginPage = () => {
   );
 
   const handleLogin = async () => {
-    console.log('🚀 LoginPage: Sign In button pressed');
-    console.log('📝 LoginPage: Username:', username);
-    console.log('📝 LoginPage: Password:', password ? '***HIDDEN***' : 'EMPTY');
-    
     if (!validateLogin()) return;
 
-    console.log('✅ LoginPage: Validation passed, calling API...');
-    
     const result = await logIn(username, password);
-    
-    console.log('📦 LoginPage: API result:', result);
 
     if (result.success) {
-      console.log('✅ LoginPage: Login successful, navigating to tabs');
-      router.replace('(tabs)');
+      router.replace('(tabs)'); // move to main app
     } else {
-      console.log('❌ LoginPage: Login failed:', result.error);
       Alert.alert('Login Failed', result.error || 'Something went wrong');
     }
   };
 
   const validateLogin = () => {
-    console.log('🔍 LoginPage: Validating login inputs');
-    
     if (!username || !password) {
-      console.log('❌ LoginPage: Validation failed - missing username or password');
       Alert.alert('Validation Error', 'Hãy nhập username và mật khẩu');
       return false;
     }
-
-    console.log('✅ LoginPage: Validation passed');
     return true;
   };
 
@@ -79,10 +63,7 @@ const LoginPage = () => {
         placeholder="Username"
         style={styles.input}
         value={username}
-        onChangeText={(text) => {
-          console.log('📝 LoginPage: Username input changed:', text);
-          setUsername(text);
-        }}
+        onChangeText={setUsername}
         editable={!loading}
       />
       <TextInput
@@ -90,10 +71,7 @@ const LoginPage = () => {
         secureTextEntry
         style={styles.input}
         value={password}
-        onChangeText={(text) => {
-          console.log('📝 LoginPage: Password input changed:', text ? '***HIDDEN***' : 'EMPTY');
-          setPassword(text);
-        }}
+        onChangeText={setPassword}
         editable={!loading}
       />
 
@@ -115,8 +93,8 @@ const LoginPage = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity 
-        style={[styles.signInButton, loading && styles.signInButtonDisabled]} 
+      <TouchableOpacity
+        style={[styles.signInButton, loading && styles.signInButtonDisabled]}
         onPress={handleLogin}
         disabled={loading}
       >

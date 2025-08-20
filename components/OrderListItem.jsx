@@ -4,14 +4,28 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import ModalTest from '../components/modalTest';
-import ModalAccepted from '../components/modalAccepted'
+import ModalAccepted from '../components/modalAccepted';
 
 const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
   const [modalVisible, setModalVisible] = useState(false);
+
+  // 🔹 Normalize data in one place
+  const orderCode = orderItem.code || orderItem.skuOpt?.code || orderItem.id || '---';
+
+  const createdDate = orderItem.createdDate || '---';
+  const updatedDate = orderItem.updatedDate || createdDate;
+  const quantity = orderItem.area ?? 0;
+
+  // Product info
+  const sku = orderItem.skuOpt?.code || orderItem.product?.sku || 'N/A';
+  const productName =
+    orderItem.labelingStandard
+
+  // Facility label
+  const facilityName =
+    orderItem.facilityType?.name || '---';
 
   return (
     <>
@@ -20,38 +34,40 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
       >
-        {/* Card Header */}
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.orderId}>{orderItem.orderId}</Text>
+          <Text style={styles.orderId}>{orderCode}</Text>
           <Text style={styles.favorite}>
-            {orderItem.isFavorite ? '★' : ''}
+            {orderItem.isException ? '★' : ''}
           </Text>
         </View>
 
-        {/* Date / Time */}
-        <Text style={styles.dateTime}>{orderItem.dateTime}</Text>
+        {/* Date */}
+        <Text style={styles.dateTime}>{createdDate}</Text>
 
-        {/* Main Row */}
+        {/* Row with product info */}
         <View style={styles.row}>
           <View style={styles.info}>
-            <Text style={styles.sku}>{orderItem.sku}</Text>
+            <Text style={styles.sku}>SKU: {sku}</Text>
             <Text>
-              Sản Phẩm: <Text style={styles.bold}>{orderItem.productName}</Text>
+              Sản Phẩm: <Text style={styles.bold}>{productName}</Text>
             </Text>
-            <Text>Ngày Cập Nhật: {orderItem.updateDate}</Text>
+            <Text>Ngày Cập Nhật: {updatedDate}</Text>
           </View>
           <View style={styles.right}>
-            <Text style={styles.qty}>{orderItem.quantity}</Text>
+            <Text style={styles.qty}>{quantity}</Text>
           </View>
         </View>
 
-        {/* Label Tag */}
-        <View style={styles.labelTag}>
-          <Text style={styles.labelText}>{orderItem.label}</Text>
-        </View>
+        {/* Facility Label */}
+        {facilityName && (
+          <View style={styles.labelTag}>
+            <Text style={styles.labelText}>{facilityName}</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
-      {/* Render the correct modal based on modalType */}
+      {/* Correct modal */}
       {modalType === 'receive' ? (
         <ModalTest
           visible={modalVisible}
