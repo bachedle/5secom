@@ -10,7 +10,9 @@ export const getOrders = async () => {
     const token = await SecureStore.getItemAsync('authToken')  
     const res = await axios.get(`${API_URL}/facility/find`, {
         headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
         }
     });
   return res.data;

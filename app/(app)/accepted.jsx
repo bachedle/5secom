@@ -1,10 +1,11 @@
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList } from 'react-native';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useRouter } from 'expo-router';
 import AcceptedList from '../../assets/data/acceptedList.json';
 import OrderListItem from '../../components/OrderListItem';
 import ModalFilter from '../../components/modalFilter';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { OrderContext } from '../../utils/orderContext';
 
 const AcceptedOrderPage = () => {
   const router = useRouter();
@@ -13,6 +14,9 @@ const AcceptedOrderPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
 
+  const { orders, loading } = useContext(OrderContext);
+  
+
   const handleBack = () => {
     router.dismiss();
   };
@@ -20,17 +24,17 @@ const AcceptedOrderPage = () => {
   const handleStatusFilterChange = (status) => setSelectedStatus(status);
   const handleDateFilterChange = (date) => setSelectedDate(date);
 
-  const filteredOrders = AcceptedList.filter(order => {
-    const searchMatch =
-      (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-      (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-      (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
+  // const filteredOrders = AcceptedList.filter(order => {
+  //   const searchMatch =
+  //     (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+  //     (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+  //     (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
 
-    const statusMatch = selectedStatus ? order.label === selectedStatus : true;
-    const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
+  //   const statusMatch = selectedStatus ? order.label === selectedStatus : true;
+  //   const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
 
-    return searchMatch && statusMatch && dateMatch;
-  });
+  //   return searchMatch && statusMatch && dateMatch;
+  // });
 
   return (
     <View style={styles.CONTAINER}>
@@ -62,7 +66,7 @@ const AcceptedOrderPage = () => {
 
       {/* FlatList Order Cards */}
       <FlatList
-        data={filteredOrders}
+        data={orders}
         keyExtractor={(item) => item.orderId}
         renderItem={({ item }) => <OrderListItem orderItem={item} modalType="return" />}
       />
