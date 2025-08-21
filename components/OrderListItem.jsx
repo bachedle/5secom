@@ -27,6 +27,10 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
   const facilityName =
     orderItem.facilityType?.name || '---';
 
+  // đã nhận/chưa nhận
+  const isAssigned = orderItem.issuePlace && orderItem.issuePlace != 'unassigned';
+  const acceptedBy = isAssigned ? orderItem.issuePlace : null;
+
   return (
     <>
       <TouchableOpacity
@@ -65,6 +69,14 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
             <Text style={styles.labelText}>{facilityName}</Text>
           </View>
         )}
+
+        {/* Assignment Status */}
+
+        <View style={[styles.statusTag, { backgroundColor: isAssigned ? '#b0ffb0' : '#e0e0e0' }]}>
+          <Text style={styles.labelText}>
+            {isAssigned ? `Đã nhận: ${acceptedBy}` : 'Chưa nhận'}
+          </Text>
+        </View>
       </TouchableOpacity>
 
       {/* Correct modal */}
