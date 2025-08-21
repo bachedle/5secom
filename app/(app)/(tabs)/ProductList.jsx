@@ -37,13 +37,16 @@
     const handleDateFilterChange = (date) => setSelectedDate(date);
 
   const filteredOrders = orders.filter(order => {
+
+    const isUnassigned = order.issuePlace === 'unassigned';
+
     const searchMatch =
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
     const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
     const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
-    return searchMatch && statusMatch && dateMatch;
+    return isUnassigned && searchMatch && statusMatch && dateMatch;
   });
 
     const handleBack = () => {
