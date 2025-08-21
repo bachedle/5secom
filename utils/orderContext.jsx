@@ -1,14 +1,54 @@
 // context/OrderContext.js
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect, useContext, useMemo} from "react";
 import { getOrders, getOrderByID, createOrder, updateOrder } from "../api/order";
 import { AuthContext } from "./authContext";
 
 export const OrderContext = createContext();
 
+const initialDraft = {
+  version: 0,
+  id: "",
+  code: "",
+  name: "",
+  address: "",
+  phone: "",
+  email: "", 
+  area: "",
+  facilityType: { id: "" },
+  orgUnit: { id: "" },
+  ownerName: "",
+  ownerPhoneNumber: "",
+  // add other required fields your API needs
+};
+
 export const OrderProvider = ({ children }) => {
   const { isLoggedIn, token } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+
+
+  //draft state
+  const [draftOrder, setDraftOrder] = useState(initialDraft);
+  
+ //top level field update
+  const updateDraft = (partial) => 
+    setDraftOrder((prev) => ({ ...prev, ...partial }));
+
+
+  //update field luu vao draft
+  const updateDraftPath = (path, value) => {
+    setDraftOrder((prev) => {
+        const clone = structuredClone(prev);
+        const keys = path.split(".");
+        let current = clone;
+        for (let i = 0; i < keys.length - 1; i++)
+            current = current[keys[i]];
+        current[keys[keys.length - 1]] = value;
+        return clone;
+    });
+  };
+
+  const resetDraft = () => setDraftOrder(initialDraft);
 
   useEffect(() => {
     console.log("Orders updated:", orders);
@@ -36,7 +76,12 @@ export const OrderProvider = ({ children }) => {
   const addOrder = async (newOrder) => {
     const created = await createOrder(newOrder);
     setOrders((prev) => [...prev, created]);
+    return created;
   };
+
+  const submitDraft = async () => {
+    return addOrder(draftOrder);
+  }
 
   const editOrder = async (id, updates) => {
     const updated = await updateOrder({ id, ...updates });
@@ -51,11 +96,31 @@ export const OrderProvider = ({ children }) => {
     }
   }, [isLoggedIn, token]);
 
+  
+  const value = useMemo(
+    () => ({
+      orders,
+      setOrders,
+      loading,
+      setLoading,
+      addOrder,
+
+      draftOrder,
+      updateDraft,
+      updateDraftPath,
+      resetDraft,
+      submitDraft,
+    }),
+    [orders, loading, draftOrder]
+  );
+
   return (
     <OrderContext.Provider
-      value={{ orders, loading, fetchOrders, addOrder, editOrder }}
+      value={ value }
     >
       {children}
     </OrderContext.Provider>
   );
 };
+
+export const useOrders = () => useContext(OrderContext);
