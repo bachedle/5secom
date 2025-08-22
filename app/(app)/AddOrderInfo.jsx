@@ -17,14 +17,22 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 
+import { useOrder } from '../../utils/orderContext';
+
+const API_URL = "https://5secom.dientoan.vn/api";
+
+
 const AddOrderInfo = () => {
+
+  const { draftOrder, updateDraftPath } = useOrder();
+
+
   const router = useRouter();
 
-  const [skuDesign, setSkuDesign] = useState('');
-  const [size, setSize] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [note, setNote] = useState('');
-  const [productType, setProductType] = useState('');
+  const [skuDesign, setSkuDesign] = useState([]);
+  const [size, setSize] = useState([]);
+
+  const [productType, setProductType] = useState([]);
   const [image, setImage] = useState('');
   const [status, setStatus] = useState('');
   const [imgRatio, setImgRatio] = useState(1);  

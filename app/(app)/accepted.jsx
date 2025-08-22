@@ -24,17 +24,20 @@ const AcceptedOrderPage = () => {
   const handleStatusFilterChange = (status) => setSelectedStatus(status);
   const handleDateFilterChange = (date) => setSelectedDate(date);
 
-  // const filteredOrders = AcceptedList.filter(order => {
-  //   const searchMatch =
-  //     (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-  //     (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-  //     (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
+  const filteredOrders = orders.filter(order => {
 
-  //   const statusMatch = selectedStatus ? order.label === selectedStatus : true;
-  //   const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
+    const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
 
-  //   return searchMatch && statusMatch && dateMatch;
-  // });
+    const searchMatch =
+      (order.productName?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.sku?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.orderId?.toLowerCase() || '').includes(searchText.toLowerCase());
+
+    const statusMatch = selectedStatus ? order.label === selectedStatus : true;
+    const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
+
+    return isAssigned && searchMatch && statusMatch && dateMatch;
+  });
 
   return (
     <View style={styles.CONTAINER}>
@@ -66,9 +69,9 @@ const AcceptedOrderPage = () => {
 
       {/* FlatList Order Cards */}
       <FlatList
-        data={orders}
-        keyExtractor={(item) => item.orderId}
-        renderItem={({ item }) => <OrderListItem orderItem={item} modalType="return" />}
+        data={filteredOrders}
+        renderItem={({ item }) => <OrderListItem orderItem={item} modalType="receive" />}
+        keyExtractor={(item, index) => item.id?.toString() || index.toString()}
       />
 
 
