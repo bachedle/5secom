@@ -16,8 +16,6 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import OrderListItem from '../../components/OrderListItem';
-import OrderItem from '../../assets/data/orderList.json';
-import AcceptedList from '../../assets/data/acceptedList.json';
 
 import { OrderContext } from '../../utils/orderContext';
 
@@ -59,7 +57,7 @@ const ManufacturingListPage = () => {
 
   const filteredOrders = orders.filter((order) => {
 
-    const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null;
+    const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
 
     // const matchesLabel = order.label === label;
     const matchesSearch =
@@ -79,7 +77,7 @@ const ManufacturingListPage = () => {
       {/* Header */}
       <View style={styles.HEADER}>
         <TouchableOpacity onPress={handleBack}>
-          <Ionicons name="chevron-back" size={24} color="black" />
+          <Ionicons name="chevron-back" size={30} color="black" />
         </TouchableOpacity>
         <Text style={styles.HEADER_TITLE}>{label}</Text>
         <View style={{ width: 24 }} />
@@ -93,7 +91,7 @@ const ManufacturingListPage = () => {
         >
           <Text style={styles.ACTIVE_TAB_TEXT}>Đã nhận</Text>
           <View style={styles.TAB_BADGE}>
-            <Text style={styles.BADGE_TEXT}>{AcceptedList.length}</Text>
+            <Text style={styles.BADGE_TEXT}>{filteredOrders.length}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -198,7 +196,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   HEADER_TITLE: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: 'bold',
   },
   STATUS_TABS: {
@@ -304,12 +302,14 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 10,
     marginTop: 20,
   },
   filledButton: {
     flex: 1,
     backgroundColor: '#f18060',
     paddingVertical: 10,
+    
     borderRadius: 8,
   },
   filledText: {
@@ -318,8 +318,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resetButton: {
-    backgroundColor: '#E0E0E0',
-    marginTop: 8,
+    backgroundColor: '#E0E0E0'
   },
   resetText: {
     textAlign: 'center',

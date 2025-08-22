@@ -13,18 +13,16 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { useOrder } from '../../utils/orderContext';
+
+const API_URL = "https://5secom.dientoan.vn/api";
+
 
 const AddGuestInfo = () => {
   const router = useRouter();
 
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [address2, setAddress2] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [country, setCountry] = useState('');
-  const [zip, setZip] = useState('');
+  const { draftOrder, updateDraftPath } = useOrder();  
+
 
   const handleBack = () => {
     router.back();
@@ -61,58 +59,59 @@ const AddGuestInfo = () => {
             <Text style={styles.subText}>Họ Tên</Text>
             <TextInput
               style={styles.input}
-              value={fullName}
-              onChangeText={setFullName}
+              value={draftOrder.name|| ""}
+              onChangeText={(text) => updateDraftPath("name", text)}
             />
 
             <Text style={styles.subText}>Số Điện Thoại</Text>
             <TextInput
               style={styles.input}
-              value={phone}
-              onChangeText={setPhone}
+              value={draftOrder.phone || ""}
+              onChangeText={(text) => updateDraftPath("phone", text)}
             />
 
             <Text style={styles.subText}>Địa Chỉ</Text>
             <TextInput
               style={styles.input}
-              value={address}
-              onChangeText={setAddress}
+              value={draftOrder.address || ""}
+              onChangeText={(text) => updateDraftPath("address", text)}
               multiline
             />
 
             <Text style={styles.subText}>Địa chỉ 2</Text>
             <TextInput
               style={styles.input}
-              value={address2}
-              onChangeText={setAddress2}
+              value={draftOrder.attr1 || ""}
+              onChangeText={(text) => updateDraftPath("attr1", text)}
+              multiline
             />
 
             <Text style={styles.subText}>Thành phố</Text>
             <TextInput
               style={styles.input}
-              value={city}
-              onChangeText={setCity}
+              value={draftOrder.attr2 || ""}
+              onChangeText={(text) => updateDraftPath("attr2", text)}
             />
 
             <Text style={styles.subText}>Tiểu bang</Text>
             <TextInput
               style={styles.input}
-              value={state}
-              onChangeText={setState}
+              value={draftOrder.attr3 || ""}
+              onChangeText={(text) => updateDraftPath("attr3", text)}
             />
 
             <Text style={styles.subText}>Quốc gia</Text>
             <TextInput
               style={styles.input}
-              value={country}
-              onChangeText={setCountry}
+              value={draftOrder.attr4 || ""}
+              onChangeText={(text) => updateDraftPath("attr4", text)}
             />
 
             <Text style={styles.subText}>Mã bưu chính</Text>
             <TextInput
               style={styles.input}
-              value={zip}
-              onChangeText={setZip}
+              value={draftOrder.attr5 || ""}
+              onChangeText={(text) => updateDraftPath("attr5", text)}
             />
           </ScrollView>
         </KeyboardAvoidingView>

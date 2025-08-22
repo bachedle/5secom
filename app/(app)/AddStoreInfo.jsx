@@ -13,7 +13,7 @@ import {
   Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 
@@ -46,6 +46,7 @@ const AddStoreInfo = () => {
   const handleNext = () => router.push('/AddGuestInfo');
 
 
+  //option picker (co the mang qua context)
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -91,7 +92,7 @@ const AddStoreInfo = () => {
             <Text style={styles.title}>Cửa Hàng</Text>
 
             <Text style={styles.subText}>Loại cửa hàng</Text>
-            <View>
+            <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedStoreType}
                 onValueChange={(value) => updateDraftPath("storeType", value)}
@@ -104,7 +105,7 @@ const AddStoreInfo = () => {
             </View>
 
             <Text style={styles.subText}>Quốc gia</Text>
-            <View>
+            <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedCountry}
                 onValueChange={(value) => updateDraftPath("country",value)}
@@ -118,7 +119,7 @@ const AddStoreInfo = () => {
 
 
             <Text style={styles.subText}>Cửa hàng</Text>
-            <View>
+            <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedStore}
                 onValueChange={(value) => updateDraftPath("store",value)}
@@ -254,5 +255,14 @@ header: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+
+    pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#dd6b4d',
+    borderRadius: 8,
+    marginVertical: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
   },
 });

@@ -70,20 +70,29 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
           </View>
         </View>
 
-        {/* Facility Label */}
-        {facilityName && (
-          <View style={styles.labelTag}>
-            <Text style={styles.labelText}>{facilityName}</Text>
+        <View style={styles.row}>
+          {/* Facility Label */}
+          {facilityName && (
+            <View style={styles.facilityTag}>
+              <Text style={styles.facilityText}>{facilityName}</Text>
+            </View>
+          )}
+
+          {/* Assignment Status */}
+          <View
+            style={[
+              styles.statusTag,
+              { backgroundColor: isAssigned ? '#4caf50' : '#f44336' }, // green = assigned, red = not assigned
+            ]}
+          >
+            <Text style={styles.statusText}>
+              {isAssigned ? `Đã nhận: ${acceptedBy}` : 'Chưa nhận'}
+            </Text>
           </View>
-        )}
-
-        {/* Assignment Status */}
-
-        <View style={[styles.statusTag, { backgroundColor: isAssigned ? '#b0ffb0' : '#e0e0e0' }]}>
-          <Text style={styles.labelText}>
-            {isAssigned ? `Đã nhận: ${acceptedBy}` : 'Chưa nhận'}
-          </Text>
         </View>
+        
+
+        
       </TouchableOpacity>
 
       {/* Correct modal */}
@@ -172,4 +181,34 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '600',
   },
+
+  facilityTag: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#e0f7fa',
+  borderRadius: 16,
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  marginTop: 10,
+},
+facilityIcon: {
+  fontSize: 14,
+  marginRight: 6,
+},
+facilityText: {
+  fontWeight: '600',
+  color: '#00796b',
+},
+
+statusTag: {
+  borderRadius: 16,
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  marginTop: 10,
+  alignSelf: 'flex-start',
+},
+statusText: {
+  fontWeight: '700',
+  color: '#fff',
+},
 });
