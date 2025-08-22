@@ -38,7 +38,7 @@
 
   const filteredOrders = orders.filter(order => {
 
-    const isUnassigned = order.issuePlace === 'unassigned';
+    const isUnassigned = order.issuePlace === 'unassigned' || order.issuePlace === null;
 
     const searchMatch =
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||

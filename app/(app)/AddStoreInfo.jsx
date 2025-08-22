@@ -13,20 +13,58 @@ import {
   Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect, use } from 'react';
+import { Picker } from '@react-native-picker/picker';
+import axios from 'axios';
+
+import { useOrder } from '../../utils/orderContext';
+
+const API_URL = "https://5secom.dientoan.vn/api";
+
 
 const AddStoreInfo = () => {
+
+  const { draftOrder, updateDraftPath } = useOrder();  
+
   const router = useRouter();
 
-  const [storeType, setStoreType] = useState('');
-  const [country, setCountry] = useState('');
-  const [store, setStore] = useState('');
-  const [sku, setSku] = useState('');
-  const [orderId, setOrderId] = useState('');
-  const [isPriority, setIsPriority] = useState(false);
+  const [storeType, setStoreType] = useState([]);
+  const [country, setCountry] = useState([]);
+  const [store, setStore] = useState([]);
+
+  const selectedStoreType = draftOrder.storeType || "";
+  const selectedCountry = draftOrder.country || "";
+  const selectedStore = draftOrder.store || "";
+
+  const sku = draftOrder.sku || "";
+  const orderId = draftOrder.orderId || "";
+  const isPriority = draftOrder.isPriority || false;
+
+
 
   const handleBack = () => router.back();
   const handleNext = () => router.push('/AddGuestInfo');
+
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const storeTypeRes = await axios.get(`${API_URL}/org-unit/search?lvl=1`);
+        setStoreType(storeTypeRes.data.content);
+
+        const countryRes = await axios.get(`${API_URL}/org-unit/search?lvl=2`)
+        setCountry(countryRes.data.content);
+
+        const storeRes = await axios.get(`${API_URL}/org-unit/search?lvl=3`)
+        setStore(storeRes.data.content);
+
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
+    }
+
+    fetchOptions();
+  }, []);
 
 
   return (
@@ -53,35 +91,51 @@ const AddStoreInfo = () => {
             <Text style={styles.title}>Cửa Hàng</Text>
 
             <Text style={styles.subText}>Loại cửa hàng</Text>
-            <TextInput
-              placeholder="trạng thái"
-              style={styles.input}
-              value={storeType}
-              onChangeText={setStoreType}
-            />
+            <View>
+              <Picker
+                selectedValue={selectedStoreType}
+                onValueChange={(value) => updateDraftPath("storeType", value)}
+              >
+                <Picker.Item label="Chọn loại cửa hàng" value="" />
+                {storeType.map((type) => (
+                  <Picker.Item key={type.id} label={type.name} value={type.id} />
+                ))}
+              </Picker>
+            </View>
 
             <Text style={styles.subText}>Quốc gia</Text>
-            <TextInput
-              placeholder="quốc gia"
-              style={styles.input}
-              value={country}
-              onChangeText={setCountry}
-            />
+            <View>
+              <Picker
+                selectedValue={selectedCountry}
+                onValueChange={(value) => updateDraftPath("country",value)}
+              >
+                <Picker.Item label="Chọn quốc gia" value="" />
+                {country.map((c) => (
+                  <Picker.Item key={c.id} label={c.name} value={c.id} />
+                ))}
+              </Picker>
+            </View>
+
 
             <Text style={styles.subText}>Cửa hàng</Text>
-            <TextInput
-              placeholder="cửa hàng"
-              style={styles.input}
-              value={store}
-              onChangeText={setStore}
-            />
+            <View>
+              <Picker
+                selectedValue={selectedStore}
+                onValueChange={(value) => updateDraftPath("store",value)}
+              >
+                <Picker.Item label="Chọn cửa hàng" value="" />
+                {store.map((s) => (
+                  <Picker.Item key={s.id} label={s.name} value={s.id} />
+                ))}
+              </Picker>
+            </View>
 
             <Text style={styles.subText}>SKU fulfill (code)</Text>
             <TextInput
               placeholder=""
               style={styles.input}
               value={sku}
-              onChangeText={setSku}
+              onChangeText={(text) => updateDraftPath("sku", text)}
             />
 
             <Text style={styles.subText}>Order ID (id_number)</Text>
@@ -89,7 +143,7 @@ const AddStoreInfo = () => {
               placeholder=""
               style={styles.input}
               value={orderId}
-              onChangeText={setOrderId}
+              onChangeText={(text) => updateDraftPath("orderId", text)}
             />
 
             {/* Switch */}
@@ -97,7 +151,7 @@ const AddStoreInfo = () => {
               <Text style={styles.subText}>Ưu tiên</Text>
               <Switch
                 value={isPriority}
-                onValueChange={setIsPriority}
+                onValueChange={(value) => updateDraftPath("isPriority", value)}
                 trackColor={{ false: '#ccc', true: '#dd6b4d' }}
                 thumbColor={'#fff'}
               />

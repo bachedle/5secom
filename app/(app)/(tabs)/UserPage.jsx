@@ -121,7 +121,7 @@ const UserPage = () => {
             {user.username || user.email || 'User'}
           </Text>
           <Text style={styles.role}>
-            Role: {user.role || user.user_type || 'Member'}
+            Role: {user.role.name || user.user_type || 'Member'}
           </Text>
 
           {/* Personal Info */}

@@ -36,16 +36,11 @@ export const OrderProvider = ({ children }) => {
 
 
   //update field luu vao draft
-  const updateDraftPath = (path, value) => {
-    setDraftOrder((prev) => {
-        const clone = structuredClone(prev);
-        const keys = path.split(".");
-        let current = clone;
-        for (let i = 0; i < keys.length - 1; i++)
-            current = current[keys[i]];
-        current[keys[keys.length - 1]] = value;
-        return clone;
-    });
+  const updateDraftPath = (field, value) => {
+    setDraftOrder((prev) => ({
+      ...prev,      // spread existing keys
+      [field]: value, // overwrite just this field
+    }));
   };
 
   const resetDraft = () => setDraftOrder(initialDraft);
@@ -123,4 +118,5 @@ export const OrderProvider = ({ children }) => {
   );
 };
 
-export const useOrders = () => useContext(OrderContext);
+//hook
+export const useOrder = () => useContext(OrderContext);

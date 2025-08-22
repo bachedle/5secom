@@ -58,7 +58,10 @@ const ManufacturingListPage = () => {
   };
 
   const filteredOrders = orders.filter((order) => {
-    const matchesLabel = order.label === label;
+
+    const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null;
+
+    // const matchesLabel = order.label === label;
     const matchesSearch =
       searchText === '' ||
       order.name?.toLowerCase().includes(searchText.toLowerCase());
@@ -68,7 +71,7 @@ const ManufacturingListPage = () => {
       new Date(order.deliveryDate).toDateString() ===
         new Date(deliveryDate).toDateString();
 
-    return matchesLabel && matchesSearch && matchesDate;
+    return isAssigned && matchesSearch && matchesDate;
   });
 
   return (

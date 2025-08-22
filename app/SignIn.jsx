@@ -110,6 +110,77 @@ const LoginPage = () => {
 
 export default LoginPage;
 
+// AUTH CONTEXT with console logs
+const logIn = async (username, password) => {
+  console.log('🔐 AuthContext: logIn called');
+  console.log('📝 AuthContext: Username:', username);
+  console.log('📝 AuthContext: Password:', password ? '***HIDDEN***' : 'EMPTY');
+  
+  try {
+    console.log('⏳ AuthContext: Setting loading to true');
+    setLoading(true);
+    setError(null);
+
+    const params = new URLSearchParams({
+        grant_type: 'password',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        username,
+        password,
+    });
+
+    console.log('📡 AuthContext: Making API request to:', `${API}/oauth2/token`);
+    console.log('📡 AuthContext: Request params:', {
+      grant_type: 'password',
+      client_id: CLIENT_ID,
+      client_secret: '***HIDDEN***',
+      username,
+      password: '***HIDDEN***'
+    });
+
+    const response = await axios.post(`${API}/oauth2/token`, params);
+    
+    console.log('✅ AuthContext: API request successful');
+    console.log('📦 AuthContext: Response status:', response.status);
+    console.log('📦 AuthContext: Response data:', response.data);
+    
+    const data = response.data;
+    
+    // Store token and user data securely
+    const authToken = data.access_token;
+    const userData = data.user || { username };
+    
+    console.log('💾 AuthContext: Storing token in SecureStore');
+    await SecureStore.setItemAsync('authToken', authToken);
+    await SecureStore.setItemAsync('user', JSON.stringify(userData));
+    
+    console.log('✅ AuthContext: Setting auth state');
+    setToken(authToken);
+    setUser(userData);
+    setIsLoggedIn(true);
+    
+    console.log('✅ AuthContext: Login completed successfully');
+    return { success: true };
+  } catch (err) {
+    console.log('❌ AuthContext: Login error occurred');
+    console.log('❌ AuthContext: Error details:', err);
+    console.log('❌ AuthContext: Error response:', err.response?.data);
+    console.log('❌ AuthContext: Error status:', err.response?.status);
+    
+    const errorMessage = err.response?.data?.error_description || 
+                        err.response?.data?.message || 
+                        err.message || 
+                        'Login failed';
+    
+    console.log('❌ AuthContext: Final error message:', errorMessage);
+    setError(errorMessage);
+    return { success: false, error: errorMessage };
+  } finally {
+    console.log('🔄 AuthContext: Setting loading to false');
+    setLoading(false);
+  }
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
