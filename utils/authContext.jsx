@@ -134,10 +134,18 @@ export function AuthProvider({ children }) {
       if (!currentUser) {
         throw new Error('Could not identify current user from the list');
       }
-      
-      console.log('🎯 Current user identified:', currentUser.username, currentUser.email);
-      setUser(currentUser);
-      return currentUser;
+
+      const userID = currentUser.id;
+
+      const detailResponse = await axios.get(`${API}/user/${userID}`, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      })
+
+      const fullUserData = detailResponse.data;
+
+      setUser(fullUserData);
+      console.log('✅ Current user data:', fullUserData);
+      return fullUserData;
       
     } catch (error) {
       console.error('Error fetching user data:', error);

@@ -14,8 +14,15 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
   // 🔹 Normalize data in one place
   const orderCode = orderItem.code || orderItem.skuOpt?.code || orderItem.id || '---';
 
-  const createdDate = orderItem.createdDate || '---';
-  const updatedDate = orderItem.updatedDate || createdDate;
+
+  
+  const createdDate = orderItem.createdDate
+    ? new Date(orderItem.createdDate).toLocaleDateString("en-CA") 
+    : "---";
+  const updatedDate = orderItem.updatedDate
+    ? new Date(orderItem.updatedDate).toLocaleDateString("en-CA") 
+    : createdDate;
+    
   const quantity = orderItem.area ?? 0;
 
   // Product info
