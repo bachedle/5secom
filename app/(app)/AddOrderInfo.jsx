@@ -11,108 +11,128 @@ import {
   Image,
   SafeAreaView,
   TouchableWithoutFeedback,
+  Alert,
 } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 
 import { useOrder } from '../../utils/orderContext';
-import { id } from 'date-fns/locale';
 
 const API_URL = "https://5secom.dientoan.vn/api";
 
-
 const AddOrderInfo = () => {
-
   const { draftOrder, updateDraftPath, submitDraft } = useOrder();
-
-
   const router = useRouter();
 
   const [skuOptions, setSkuOptions] = useState([]);
-  const [size, setSize] = useState([]);
+  const [stateOptions, setStateOptions] = useState([]); // keep full list
+  const [size, setSize] = useState([]); // filtered sizes
   const [orderType, setOrderType] = useState([]);
 
-  const [productType, setProductType] = useState('');
+  const [labeling, setLabeling] = useState([]);
   const [image, setImage] = useState('');
-  const [imgRatio, setImgRatio] = useState(1);  
-
-
+  const [imgRatio, setImgRatio] = useState(1);
 
   const handleBack = () => router.back();
 
-  //save and exit
-const handleSave = async () => {
-  try {
-    await submitDraft();
-    Alert.alert('Thành công', 'Đơn hàng đã được tạo!');
-    router.replace('/OrderList'); // or wherever your list is
-  } catch (e) {
-    console.error(e);
-    Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
-  }
-};
-  //save and can still add more order
-const handleSaveAndContinue = async () => {
-  // keep some selections for next entry (example)
-  const keep = {
-    facilityType: draftOrder.facilityType,
-    stateOpt: draftOrder.stateOpt,
-    orgUnit: draftOrder.orgUnit,
+  // Save and exit
+  const handleSave = async () => {
+    try {
+      await submitDraft();
+      Alert.alert('Thành công', 'Đơn hàng đã được tạo!');
+      router.replace('/OrderList');
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
+    }
   };
-  try {
-    await submitDraft();
-    updateDraft(keep); // re-apply a few fields after reset
-    Alert.alert('Thành công', 'Đã lưu và tiếp tục tạo đơn mới');
-  } catch (e) {
-    console.error(e);
-    Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
-  }
-};
-  useEffect(() => {
-    const fetchSizeOptions = async () => {
-      try {
-        const sizeRes = await axios.get(`${API_URL}/option-group/find?code=state-test`)
-        setSize(sizeRes.data.content);
 
-        const orderTypeRes = await axios.get(`${API_URL}/option-group/find?code=facility-type`)
+  // Save and continue
+  const handleSaveAndContinue = async () => {
+    const keep = {
+      facilityType: draftOrder.facilityType,
+      stateOpt: draftOrder.stateOpt,
+      orgUnit: draftOrder.orgUnit,
+    };
+    try {
+      await submitDraft();
+      for (const key in keep) {
+        updateDraftPath(key, keep[key]);
+      }
+      Alert.alert('Thành công', 'Đã lưu và tiếp tục tạo đơn mới');
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
+    }
+  };
+
+  // Fetch dropdown options
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const token = await SecureStore.getItemAsync("authToken");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        };
+
+        const sizeRes = await axios.get(
+          `${API_URL}/option/find?optionGroupCode=state-test`,
+          { headers }
+        );
+        setSize(sizeRes.data.content);   
+
+        const orderTypeRes = await axios.get(
+          `${API_URL}/option/find?optionGroupCode=facility-type`,
+          { headers }
+        );
         setOrderType(orderTypeRes.data.content);
 
-        const skuRes = await axios.get(`${API_URL}/option-group/find?code=skudesigns`);
-        setSkuOptions(skuRes.data.content);
+        const skuRes = await axios.get(
+          `${API_URL}/option/find?optionGroupCode=skudesigns`,
+          { headers }
+        );
+        setSkuOptions(skuRes.data.content); 
 
-        
+        const labelingStandardRes = await axios.get(
+          `${API_URL}/option/find?optionGroupCode=type-of-goods`,
+          { headers }
+        );
+        setLabeling(labelingStandardRes.data.content);
       } catch (error) {
-        console.error("Error fetching size options:", error);
-    }
-  }
-  fetchSizeOptions();
-}, []);
+        console.error("Error fetching options:", error.response?.data || error.message);
+      }
+    };
+    fetchOptions();
+  }, []);
+
+const handleSkuChange = (val) => {
+  updateDraftPath("skuOpt", { id: val });
+};
+
 
   const pickImage = async () => {
-    // Ask for permission
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       alert('Bạn cần cấp quyền truy cập ảnh để tiếp tục.');
       return;
     }
 
-    // Open image picker
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-    //   aspect: [16, 9],
       quality: 1,
     });
 
     if (!result.canceled) {
-        const { uri, width, height } = result.assets[0];
-        setImage(uri);
-        setImgRatio(width / height);
+      const { uri, width, height } = result.assets[0];
+      setImage(uri);
+      setImgRatio(width / height);
     }
   };
 
@@ -141,7 +161,7 @@ const handleSaveAndContinue = async () => {
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={draftOrder.skuOpt?.id || ""}
-                onValueChange={(val) => updateDraftPath("skuOpt", { id: val })}
+                onValueChange={handleSkuChange} // ✅ updates size on change
               >
                 <Picker.Item label="Chọn SKU Design" value="" />
                 {skuOptions.map((opt) => (
@@ -153,16 +173,14 @@ const handleSaveAndContinue = async () => {
             {/* Kích thước */}
             <Text style={styles.subText}>Kích thước</Text>
             <View style={styles.pickerWrapper}>
-              <Picker 
-                selectedValue={draftOrder.stateOpt?id : ""} 
+              <Picker
+                selectedValue={draftOrder.stateOpt?.id || ""}
                 onValueChange={(value) => updateDraftPath("stateOpt", { id: value })}
               >
                 <Picker.Item label="Chọn kích thước" value="" />
-                {
-                  size.map((s) => (
-                    <Picker.Item key={s.id} label={s.name} value={s.id} />
-                  ))
-                }
+                {size.map((s) => (
+                  <Picker.Item key={s.id} label={s.name} value={s.id} />
+                ))}
               </Picker>
             </View>
 
@@ -188,12 +206,14 @@ const handleSaveAndContinue = async () => {
             <Text style={styles.subText}>Loại hàng</Text>
             <View style={styles.pickerWrapper}>
               <Picker
-                selectedValue={productType}
-                onValueChange={(val) => setProductType(val)}
+                selectedValue={ draftOrder.labeling || "" }
+                onValueChange={(value) => updateDraftPath("labeling", value)}
               >
                 <Picker.Item label="Chọn loại hàng" value="" />
-                <Picker.Item label="Quần áo" value="clothing" />
-                <Picker.Item label="Phụ kiện" value="accessory" />
+                {labeling.map((l) => (
+                  <Picker.Item key={l.id} label={l.name} value={l.name} />
+                ))}
+
               </Picker>
             </View>
 
@@ -201,14 +221,13 @@ const handleSaveAndContinue = async () => {
             <Text style={styles.subText}>Hình ảnh</Text>
             <TouchableOpacity
               style={styles.uploadButton}
-              onPress={pickImage}            // ← Add onPress here
+              onPress={pickImage}
             >
               <Text style={{ color: '#555' }}>
                 {image ? 'Ảnh đã chọn' : 'Chọn hoặc tải ảnh lên'}
               </Text>
             </TouchableOpacity>
 
-            {/* Conditionally render the picked image */}
             {image && (
               <View style={{ marginVertical: 8, width:'100%', aspectRatio: imgRatio }}>
                 <Image
@@ -220,18 +239,18 @@ const handleSaveAndContinue = async () => {
             )}
 
             {/* Trạng thái */}
-          <Text style={styles.subText}>Trạng thái</Text>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={draftOrder.facilityType?.id || ""}
-              onValueChange={(value) => updateDraftPath("facilityType", { id: value })}
-            >
-              <Picker.Item label="Chọn trạng thái" value="" />
-              {orderType.map((ot) => (
-                <Picker.Item key={ot.id} label={ot.name} value={ot.id} />
-              ))}
-            </Picker>
-          </View>
+            <Text style={styles.subText}>Trạng thái</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={draftOrder.facilityType?.id || ""}
+                onValueChange={(value) => updateDraftPath("facilityType", { id: value })}
+              >
+                <Picker.Item label="Chọn trạng thái" value="" />
+                {orderType.map((ot) => (
+                  <Picker.Item key={ot.id} label={ot.name} value={ot.id} />
+                ))}
+              </Picker>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
@@ -260,10 +279,7 @@ const handleSaveAndContinue = async () => {
 export default AddOrderInfo;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9f9f9',
-  },
+  container: { flex: 1, backgroundColor: '#f9f9f9' },
   header: {
     backgroundColor: '#fff',
     paddingTop: 50,
@@ -276,28 +292,17 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  headerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-contentWrapper: {
+  headerText: { fontSize: 22, fontWeight: 'bold' },
+  contentWrapper: {
     backgroundColor: 'white',
     borderRadius: 8,
     margin: 10,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    paddingBottom: 100
+    paddingBottom: 100,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  subText: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginTop: 12,
-  },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  subText: { fontSize: 13, fontWeight: 'bold', marginTop: 12 },
   input: {
     borderWidth: 1,
     borderColor: '#dd6b4d',
@@ -353,25 +358,13 @@ contentWrapper: {
     borderRadius: 8,
     alignItems: 'center',
   },
-  cancelText: {
-    color: '#dd6b4d',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  saveText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  cancelText: { color: '#dd6b4d', fontSize: 16, fontWeight: 'bold' },
+  saveText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   saveContinueButton: {
     backgroundColor: '#dd6b4d',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
-  saveContinueText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  saveContinueText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });

@@ -28,18 +28,16 @@ const AddStoreInfo = () => {
 
   const router = useRouter();
 
-  const [storeType, setStoreType] = useState([]);
+  const [storeType, setStoreType] = useState([]); 
   const [country, setCountry] = useState([]);
   const [store, setStore] = useState([]);
 
-  const selectedStoreType = draftOrder.storeType || "";
-  const selectedCountry = draftOrder.country || "";
-  const selectedStore = draftOrder.store || "";
-
-  const sku = draftOrder.sku || "";
-  const orderId = draftOrder.orderId || "";
+  const selectedStoreType = draftOrder.facilityType?.id || "";
+  const selectedStore = draftOrder.orgUnit?.id || "";
+  const selectedCountry = draftOrder.country || ""; // ⚠️ need to confirm with backend
+  const sku = draftOrder.skuOpt || "";  // ✅ FIXED
+  const orderId = draftOrder.code || "";    // ✅ FIXED
   const isPriority = draftOrder.isPriority || false;
-
 
 
   const handleBack = () => router.back();
@@ -94,8 +92,8 @@ const AddStoreInfo = () => {
             <Text style={styles.subText}>Loại cửa hàng</Text>
             <View style={styles.pickerWrapper}>
               <Picker
-                selectedValue={selectedStore}
-                onValueChange={(value) => updateDraftPath("orgUnit", { id: value })}
+                selectedValue={selectedStoreType}
+                onValueChange={(value) => updateDraftPath("facilityType", { id: value })}
               >
                 <Picker.Item label="Chọn loại cửa hàng" value="" />
                 {storeType.map((type) => (
@@ -117,12 +115,11 @@ const AddStoreInfo = () => {
               </Picker>
             </View>
 
-
             <Text style={styles.subText}>Cửa hàng</Text>
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedStore}
-                onValueChange={(value) => updateDraftPath("store",value)}
+                onValueChange={(value) => updateDraftPath("orgUnit", { id: value })}
               >
                 <Picker.Item label="Chọn cửa hàng" value="" />
                 {store.map((s) => (
@@ -139,12 +136,11 @@ const AddStoreInfo = () => {
               onChangeText={(text) => updateDraftPath("sku", text)}
             />
 
-            <Text style={styles.subText}>Order ID (id_number)</Text>
+            <Text style={styles.subText}>Order ID</Text>
             <TextInput
-              placeholder=""
               style={styles.input}
               value={orderId}
-              onChangeText={(text) => updateDraftPath("orderId", text)}
+              onChangeText={(text) => updateDraftPath("code", text)} // ✅ FIXED
             />
 
             {/* Switch */}
