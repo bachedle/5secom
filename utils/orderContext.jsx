@@ -15,8 +15,13 @@ const initialDraft = {
   phone: "",
   email: "",
   area: "",
+  areaAdmin: "",
+  lat: "",
+  lon: "",
   facilityType: { id: "" },
+  stateOpt: { id: "" },
   orgUnit: { id: "" },
+  skuOpt: { id: "" },
   ownerName: "",
   ownerPhoneNumber: "",
   storeType: "",
@@ -25,7 +30,64 @@ const initialDraft = {
   sku: "",
   orderId: "",
   isPriority: false,
+  note: "",
+  attr1: "",
+  attr2: "",
+  attr3: "",
+  attr4: "",
+  attr5: "",
 };
+
+const buildOrderPayload = (draft) => {
+  const today = new Date().toISOString().split('T')[0];
+  const parseNum = (v) => (v === "" || v === null || v === undefined ? 0 : Number(v));
+
+  // allow both object-with-id or raw id in draft
+  const objId = (v) => (typeof v === "string" ? v : v?.id || "");
+
+  return {
+    code: draft.code || draft.sku || "",     // if you store a code elsewhere, map it here
+    name: draft.name || "",
+    address: draft.address || "",
+    phone: draft.phone || "",
+    email: draft.email || "",
+
+    area: parseNum(draft.area),
+    areaAdmin: parseNum(draft.areaAdmin),
+    lat: draft.lat || "",
+    lon: draft.lon || "",
+
+    facilityType: { id: objId(draft.facilityType) },
+    orgUnit:      { id: objId(draft.orgUnit) },   // typically the deepest "store" id
+    idNumber: draft.orderId || "",                // map your "orderId" → backend "idNumber"
+
+    issueDate: draft.issueDate || today,
+    issuePlace: draft.issuePlace || "",
+    note: draft.note || "",
+
+    establishmentDate: draft.establishmentDate || today,
+    idIssueDate: draft.idIssueDate || today,
+
+    livestockCrops: draft.livestockCrops || "",
+    sampleSource: draft.sampleSource || "",
+    labelingStandard: draft.labelingStandard || "",
+
+    ownerName: draft.ownerName || "",
+    ownerPhoneNumber: draft.ownerPhoneNumber || "",
+
+    attr1: draft.attr1 || "",
+    attr2: draft.attr2 || "",
+    attr3: draft.attr3 || "",
+    attr4: draft.attr4 || "",
+    attr5: draft.attr5 || "",
+
+    skuOpt:  { id: objId(draft.skuOpt) },
+    stateOpt:{ id: objId(draft.stateOpt) },
+
+    isException: !!draft.isPriority,            // map your switch → backend field
+  };
+};
+
 
 export const OrderProvider = ({ children }) => {
   // Support both old and new AuthContext structures
@@ -160,6 +222,7 @@ export const OrderProvider = ({ children }) => {
 
   // Submit draft (from current version)
   const submitDraft = async () => {
+    const payload = buildOrderPayload(draftOrder);
     return addOrder(draftOrder);
   };
 

@@ -14,32 +14,82 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
+import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 
 import { useOrder } from '../../utils/orderContext';
+import { id } from 'date-fns/locale';
 
 const API_URL = "https://5secom.dientoan.vn/api";
 
 
 const AddOrderInfo = () => {
 
-  const { draftOrder, updateDraftPath } = useOrder();
+  const { draftOrder, updateDraftPath, submitDraft } = useOrder();
 
 
   const router = useRouter();
 
-  const [skuDesign, setSkuDesign] = useState([]);
+  const [skuOptions, setSkuOptions] = useState([]);
   const [size, setSize] = useState([]);
+  const [orderType, setOrderType] = useState([]);
 
-  const [productType, setProductType] = useState([]);
+  const [productType, setProductType] = useState('');
   const [image, setImage] = useState('');
-  const [status, setStatus] = useState('');
   const [imgRatio, setImgRatio] = useState(1);  
 
+
+
   const handleBack = () => router.back();
-  const handleSave = () => {};
-  const handleSaveAndContinue = () => {};
+
+  //save and exit
+const handleSave = async () => {
+  try {
+    await submitDraft();
+    Alert.alert('Thành công', 'Đơn hàng đã được tạo!');
+    router.replace('/OrderList'); // or wherever your list is
+  } catch (e) {
+    console.error(e);
+    Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
+  }
+};
+  //save and can still add more order
+const handleSaveAndContinue = async () => {
+  // keep some selections for next entry (example)
+  const keep = {
+    facilityType: draftOrder.facilityType,
+    stateOpt: draftOrder.stateOpt,
+    orgUnit: draftOrder.orgUnit,
+  };
+  try {
+    await submitDraft();
+    updateDraft(keep); // re-apply a few fields after reset
+    Alert.alert('Thành công', 'Đã lưu và tiếp tục tạo đơn mới');
+  } catch (e) {
+    console.error(e);
+    Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
+  }
+};
+  useEffect(() => {
+    const fetchSizeOptions = async () => {
+      try {
+        const sizeRes = await axios.get(`${API_URL}/option-group/find?code=state-test`)
+        setSize(sizeRes.data.content);
+
+        const orderTypeRes = await axios.get(`${API_URL}/option-group/find?code=facility-type`)
+        setOrderType(orderTypeRes.data.content);
+
+        const skuRes = await axios.get(`${API_URL}/option-group/find?code=skudesigns`);
+        setSkuOptions(skuRes.data.content);
+
+        
+      } catch (error) {
+        console.error("Error fetching size options:", error);
+    }
+  }
+  fetchSizeOptions();
+}, []);
 
   const pickImage = async () => {
     // Ask for permission
@@ -90,23 +140,29 @@ const AddOrderInfo = () => {
             <Text style={styles.subText}>SKU Design</Text>
             <View style={styles.pickerWrapper}>
               <Picker
-                selectedValue={skuDesign}
-                onValueChange={(val) => setSkuDesign(val)}
+                selectedValue={draftOrder.skuOpt?.id || ""}
+                onValueChange={(val) => updateDraftPath("skuOpt", { id: val })}
               >
                 <Picker.Item label="Chọn SKU Design" value="" />
-                <Picker.Item label="SKU001" value="sku001" />
-                <Picker.Item label="SKU002" value="sku002" />
+                {skuOptions.map((opt) => (
+                  <Picker.Item key={opt.id} label={opt.name} value={opt.id} />
+                ))}
               </Picker>
             </View>
 
             {/* Kích thước */}
             <Text style={styles.subText}>Kích thước</Text>
             <View style={styles.pickerWrapper}>
-              <Picker selectedValue={size} onValueChange={setSize}>
+              <Picker 
+                selectedValue={draftOrder.stateOpt?id : ""} 
+                onValueChange={(value) => updateDraftPath("stateOpt", { id: value })}
+              >
                 <Picker.Item label="Chọn kích thước" value="" />
-                <Picker.Item label="S" value="S" />
-                <Picker.Item label="M" value="M" />
-                <Picker.Item label="L" value="L" />
+                {
+                  size.map((s) => (
+                    <Picker.Item key={s.id} label={s.name} value={s.id} />
+                  ))
+                }
               </Picker>
             </View>
 
@@ -115,16 +171,16 @@ const AddOrderInfo = () => {
             <TextInput
               style={styles.input}
               keyboardType="numeric"
-              value={quantity}
-              onChangeText={setQuantity}
+              value={draftOrder.area ? String(draftOrder.area) : ''}
+              onChangeText={(text) => updateDraftPath("area", text)}
             />
 
             {/* Note */}
             <Text style={styles.subText}>Thông tin đơn hàng (note)</Text>
             <TextInput
               style={[styles.input, { height: 80 }]}
-              value={note}
-              onChangeText={setNote}
+              value={draftOrder.note || ""}
+              onChangeText={(text) => updateDraftPath("note", text)}
               multiline
             />
 
@@ -164,17 +220,18 @@ const AddOrderInfo = () => {
             )}
 
             {/* Trạng thái */}
-            <Text style={styles.subText}>Trạng thái</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={status}
-                onValueChange={(val) => setStatus(val)}
-              >
-                <Picker.Item label="Chọn trạng thái" value="" />
-                <Picker.Item label="Đang xử lý" value="processing" />
-                <Picker.Item label="Hoàn thành" value="completed" />
-              </Picker>
-            </View>
+          <Text style={styles.subText}>Trạng thái</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={draftOrder.facilityType?.id || ""}
+              onValueChange={(value) => updateDraftPath("facilityType", { id: value })}
+            >
+              <Picker.Item label="Chọn trạng thái" value="" />
+              {orderType.map((ot) => (
+                <Picker.Item key={ot.id} label={ot.name} value={ot.id} />
+              ))}
+            </Picker>
+          </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
@@ -202,7 +259,6 @@ const AddOrderInfo = () => {
 
 export default AddOrderInfo;
 
-// ... your existing styles unchanged ...
 const styles = StyleSheet.create({
   container: {
     flex: 1,

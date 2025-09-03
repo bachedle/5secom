@@ -94,8 +94,8 @@ const AddStoreInfo = () => {
             <Text style={styles.subText}>Loại cửa hàng</Text>
             <View style={styles.pickerWrapper}>
               <Picker
-                selectedValue={selectedStoreType}
-                onValueChange={(value) => updateDraftPath("storeType", value)}
+                selectedValue={selectedStore}
+                onValueChange={(value) => updateDraftPath("orgUnit", { id: value })}
               >
                 <Picker.Item label="Chọn loại cửa hàng" value="" />
                 {storeType.map((type) => (
