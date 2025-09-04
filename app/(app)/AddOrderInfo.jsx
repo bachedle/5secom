@@ -44,7 +44,7 @@ const AddOrderInfo = () => {
     try {
       await submitDraft();
       Alert.alert('Thành công', 'Đơn hàng đã được tạo!');
-      router.replace('/OrderList');
+      router.replace('/ProductList');
     } catch (e) {
       console.error(e);
       Alert.alert('Lỗi', 'Không thể tạo đơn hàng');

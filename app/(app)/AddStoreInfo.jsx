@@ -34,9 +34,9 @@ const AddStoreInfo = () => {
 
   const selectedStoreType = draftOrder.facilityType?.id || "";
   const selectedStore = draftOrder.orgUnit?.id || "";
-  const selectedCountry = draftOrder.country || ""; // ⚠️ need to confirm with backend
-  const sku = draftOrder.skuOpt || "";  // ✅ FIXED
-  const orderId = draftOrder.code || "";    // ✅ FIXED
+  const selectedCountry = draftOrder.country || "";
+  const sku = draftOrder.skuOpt || "";  
+  const orderId = draftOrder.idNumber || "";    
   const isPriority = draftOrder.isPriority || false;
 
 

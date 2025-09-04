@@ -5,9 +5,8 @@ import * as SecureStore from 'expo-secure-store';
 const API_URL = "https://5secom.dientoan.vn/api";
 
 // GET all orders
-export const getOrders = async () => {
+export const getOrders = async (token) => {
   try {
-    const token = await SecureStore.getItemAsync('authToken')  
     const res = await axios.get(`${API_URL}/facility/find`, {
         headers: {
             Authorization: `Bearer ${token}`,

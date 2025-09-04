@@ -28,6 +28,7 @@ const initialDraft = {
   country: null,
   store: null,
   sku: null,
+  code: null,
   idNumber: null,
   isPriority: false,
   note: null,
@@ -57,6 +58,7 @@ export const OrderProvider = ({ children }) => {
   const token = authContext?.token ?? authContext?.authState?.token;
 
   const [orders, setOrders] = useState([]);
+  const [totalOrders, setTotalOrders] = useState(0); 
   const [loading, setLoading] = useState(false);
   const [draftOrder, setDraftOrder] = useState(initialDraft);
 
@@ -109,6 +111,7 @@ export const OrderProvider = ({ children }) => {
     try {
       const data = await getOrders(token);
       setOrders(data?.content || data || []);
+      setTotalOrders(data?.totalElements || 0); 
     } catch (err) {
       console.error("Error fetching orders:", err);
       setOrders([]);
@@ -176,6 +179,7 @@ export const OrderProvider = ({ children }) => {
       loading,
       setLoading,
       fetchOrders,
+      totalOrders,
       addOrder,
       editOrder,
       draftOrder,

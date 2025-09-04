@@ -38,6 +38,33 @@ export default function AppLayout() {
           headerBackVisible: false,
         }}
       />
+      <Stack.Screen
+        name="AddStoreInfo"
+        options={{
+          title: 'Tạo Đơn',
+          headerShown: false,
+          headerBackVisible: false,
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="AddGuestInfo"
+        options={{
+          title: 'Tạo Đơn',
+          headerShown: false,
+          headerBackVisible: false,
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="AddOrderInfo"
+        options={{
+          title: 'Tạo Đơn',
+          headerShown: false,
+          headerBackVisible: false,
+          presentation: 'modal',
+        }}
+      />
     </Stack>
   );
 }
