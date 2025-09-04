@@ -44,7 +44,8 @@ export default function AppLayout() {
           title: 'Tạo Đơn',
           headerShown: false,
           headerBackVisible: false,
-          presentation: 'modal',
+          animation: "slide_from_right", // ✅ transition animation
+
         }}
       />
       <Stack.Screen
@@ -53,7 +54,8 @@ export default function AppLayout() {
           title: 'Tạo Đơn',
           headerShown: false,
           headerBackVisible: false,
-          presentation: 'modal',
+                    animation: "slide_from_right", // ✅ transition animation
+
         }}
       />
       <Stack.Screen
@@ -62,7 +64,8 @@ export default function AppLayout() {
           title: 'Tạo Đơn',
           headerShown: false,
           headerBackVisible: false,
-          presentation: 'modal',
+                    animation: "slide_from_right", // ✅ transition animation
+
         }}
       />
     </Stack>

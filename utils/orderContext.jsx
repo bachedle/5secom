@@ -16,6 +16,7 @@ const initialDraft = {
   email: null,
   area: null,
   areaAdmin: null,
+  labelingStandard: null,
   lat: null,
   lon: null,
   facilityType: null,

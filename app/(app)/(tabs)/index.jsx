@@ -1,28 +1,75 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import React , { useContext }from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import React , { useContext, useState }from 'react';
 import OrderStatusTab from '../../../components/OrderStatusTab';
 import {OrderContext} from '../../../utils/orderContext';
 import { formatNumber } from '../../../utils/numberFormat';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const HomePage = () => {
   const { totalOrders } = useContext(OrderContext);
 
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+
+  const formattedDate = selectedDate.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+  }).toUpperCase();
+
+  const { orders } = useContext(OrderContext);
+
+
+  const ordersForDate = orders.filter(order => {
+    const orderDate = new Date(order.createdDate); // adjust field name!
+    return (
+      orderDate.getFullYear() === selectedDate.getFullYear() &&
+      orderDate.getMonth() === selectedDate.getMonth() &&
+      orderDate.getDate() === selectedDate.getDate()
+    );
+  });
+
+
+
   return (
     <View style={styles.background}>
+
+      {showPicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={(event, date) => {
+            setShowPicker(false);
+            if (date) setSelectedDate(date);
+          }}
+        />
+      )}
+
         {/* Dashboard Heading */}
         <View style={styles.headerWrapper}>
           <View style={styles.headingRow}>
             <Text style={styles.headingText}>Dashboard</Text>
-            <Text style={styles.dateText}>22 JUL</Text>
+            <TouchableOpacity onPress={() => setShowPicker(true)}>
+              <Text style={styles.dateText}>{formattedDate}</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={{ marginTop: 30 }}>
-            <Text style={styles.subHeadingText}>Tổng đơn</Text>
-            <Text style={styles.headingText}>{formatNumber(totalOrders)}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+            <View>
+              <Text style={styles.subHeadingText}>Tổng đơn</Text>
+              <Text style={styles.headingText}>{formatNumber(totalOrders)}</Text>
+            </View>
+
+            <View>
+              <Text style={styles.subHeadingText}>Tổng đơn theo ngày</Text>
+              <Text style={styles.headingText}>{formatNumber(ordersForDate.length)}</Text>
+            </View>
           </View>
+
+          
 
           {/* Fixed Tracking + Ngày Ship Row */}
-          <View style={styles.infoRow}>
+          {/* <View style={styles.infoRow}>
             <View style={styles.infoBox}>
               <Text style={styles.infoLabel}>Tracking mới nhất</Text>
               <Text style={styles.infoValue}>SKU001</Text>
@@ -31,7 +78,7 @@ const HomePage = () => {
               <Text style={styles.infoLabel}>Ngày Ship gần nhất</Text>
               <Text style={styles.infoValue}>20 JUL 2025</Text>
             </View>
-          </View>
+          </View> */}
         </View>
 
         {/* White Scrollable Section */}
@@ -62,11 +109,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 70,
   },
 
   headingText: {
-    fontSize: 40,
+    fontSize: 50,
     fontWeight: 'bold',
     color: '#fff',
   },
