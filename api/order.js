@@ -5,9 +5,8 @@ import * as SecureStore from 'expo-secure-store';
 const API_URL = "https://5secom.dientoan.vn/api";
 
 // GET all orders
-export const getOrders = async () => {
+export const getOrders = async (token) => {
   try {
-    const token = await SecureStore.getItemAsync('authToken')  
     const res = await axios.get(`${API_URL}/facility/find`, {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -27,15 +26,30 @@ export const getOrderByID = async (id) => {
     const res = await axios.get(`${API_URL}/facility/${id}`);
     return res.data;
 };
+
 // CREATE order
 export const createOrder = async (order) => {
-  const res = await axios.post(`${API_URL}/facility`, order);
+  const token = await SecureStore.getItemAsync('authToken');
+  const res = await axios.post(`${API_URL}/facility`, order, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  });
   return res.data;
 };
 
 // UPDATE order
 export const updateOrder = async (id, order) => {
-  const res = await axios.patch(`${API_URL}/${id}`, order);
+  const token = await SecureStore.getItemAsync('authToken');
+  const res = await axios.patch(`${API_URL}/facility/${id}`, order, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  });
   return res.data;
 };
 

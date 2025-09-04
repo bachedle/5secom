@@ -7,12 +7,13 @@ import {
 } from 'react-native';
 import ModalTest from '../components/modalTest';
 import ModalAccepted from '../components/modalAccepted';
+import { formatNumber } from '../utils/numberFormat';
 
 const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   // 🔹 Normalize data in one place
-  const orderCode = orderItem.code || orderItem.skuOpt?.code || orderItem.id || '---';
+  const orderCode = orderItem.code || orderItem.idNumber || '---';
 
 
   
@@ -23,7 +24,7 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
     ? new Date(orderItem.updatedDate).toLocaleDateString("en-CA") 
     : createdDate;
     
-  const quantity = orderItem.area ?? 0;
+  const quantity = formatNumber(orderItem.area) ?? 0;
 
   // Product info
   const sku = orderItem.skuOpt?.code || orderItem.product?.sku || 'N/A';

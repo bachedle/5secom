@@ -1,8 +1,12 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import React from 'react';
+import React , { useContext }from 'react';
 import OrderStatusTab from '../../../components/OrderStatusTab';
+import {OrderContext} from '../../../utils/orderContext';
+import { formatNumber } from '../../../utils/numberFormat';
 
 const HomePage = () => {
+  const { totalOrders } = useContext(OrderContext);
+
   return (
     <View style={styles.background}>
         {/* Dashboard Heading */}
@@ -13,8 +17,8 @@ const HomePage = () => {
           </View>
 
           <View style={{ marginTop: 30 }}>
-            <Text style={styles.subHeadingText}>Tổng doanh thu</Text>
-            <Text style={styles.headingText}>$123456789</Text>
+            <Text style={styles.subHeadingText}>Tổng đơn</Text>
+            <Text style={styles.headingText}>{formatNumber(totalOrders)}</Text>
           </View>
 
           {/* Fixed Tracking + Ngày Ship Row */}

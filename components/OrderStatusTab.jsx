@@ -3,7 +3,6 @@ import React from 'react';
 import { useRouter } from 'expo-router'; 
 
 const cardData = [
-  { id: 1, label: 'Đơn Mới', count: 200, span: true },
   { id: 2, label: 'Chưa Có Hình', count: 200 },
   { id: 3, label: 'Vẽ 2D', count: 200 },
   { id: 4, label: 'Thêu', count: 200 },

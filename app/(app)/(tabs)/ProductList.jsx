@@ -21,7 +21,6 @@
   import * as SecureStore from 'expo-secure-store';
 
   const ProductListPage = () => {
-    const { label } = useLocalSearchParams();
     const router = useRouter();
 
     const [searchText, setSearchText] = useState('');
@@ -49,9 +48,9 @@
     return isUnassigned && searchMatch && statusMatch && dateMatch;
   });
 
-    const handleBack = () => {
-      router.dismiss();
-    };
+    // const handleBack = () => {
+    //   router.dismiss();
+    // };
 
     const facilityTypes = Array.from(
       new Map(orders.map(o => [o.facilityType?.id, o.facilityType])).values()
