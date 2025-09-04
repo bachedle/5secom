@@ -29,8 +29,9 @@ const AddOrderInfo = () => {
   const router = useRouter();
 
   const [skuOptions, setSkuOptions] = useState([]);
-  const [stateOptions, setStateOptions] = useState([]); // keep full list
-  const [size, setSize] = useState([]); // filtered sizes
+  const [allSizes, setAllSizes] = useState([]);  // full list from API
+  const [filteredSizes, setFilteredSizes] = useState([]); // based on sku
+
   const [orderType, setOrderType] = useState([]);
 
   const [labeling, setLabeling] = useState([]);
@@ -85,8 +86,8 @@ const AddOrderInfo = () => {
           `${API_URL}/option/find?optionGroupCode=state-test`,
           { headers }
         );
-        setSize(sizeRes.data.content);   
-
+        setAllSizes(sizeRes.data.content);
+        setFilteredSizes(sizeRes.data.content);
         const orderTypeRes = await axios.get(
           `${API_URL}/option/find?optionGroupCode=facility-type`,
           { headers }
@@ -113,7 +114,14 @@ const AddOrderInfo = () => {
 
 const handleSkuChange = (val) => {
   updateDraftPath("skuOpt", { id: val });
+
+  // Example: if sizes are linked by parentId = skuId
+  const relevantSizes = allSizes.filter((s) => s.skuOpt?.id === val);
+
+  setFilteredSizes(relevantSizes);
+  updateDraftPath("stateOpt", { id: "" }); // reset size if sku changed
 };
+
 
 
   const pickImage = async () => {
@@ -178,10 +186,11 @@ const handleSkuChange = (val) => {
                 onValueChange={(value) => updateDraftPath("stateOpt", { id: value })}
               >
                 <Picker.Item label="Chọn kích thước" value="" />
-                {size.map((s) => (
+                {filteredSizes.map((s) => (
                   <Picker.Item key={s.id} label={s.name} value={s.id} />
                 ))}
               </Picker>
+
             </View>
 
             {/* Số lượng */}
