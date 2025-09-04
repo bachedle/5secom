@@ -25,33 +25,17 @@ const OrderStatusTab = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Quản lý Đơn</Text>
       <View style={styles.grid}>
-        {cardData.map((item, index) => {
-          if (item.label === 'Đơn Mới') {
-            // Non-clickable card
-            return (
-              <View
-                key={index}
-                style={[styles.card, item.span ? styles.spanCard : styles.halfCard]}
-              >
-                <Text style={styles.label}>{item.label}</Text>
-                <Text style={styles.count}>{item.count}</Text>
-              </View>
-            );
-          }
-
-          // Clickable card
-          return (
-            <TouchableOpacity
-              key={index}
-              style={[styles.card, item.span ? styles.spanCard : styles.halfCard]}
-              onPress={() => handleCardPress(item.label)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.label}>{item.label}</Text>
-              <Text style={styles.count}>{item.count}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        {cardData.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.card}
+            onPress={() => handleCardPress(item.label)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.label}>{item.label}</Text>
+            <Text style={styles.count}>{item.count}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
@@ -67,7 +51,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   grid: {
     flexDirection: 'row',
@@ -76,30 +60,27 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#E16A54',
-    borderRadius: 10,
-    paddingVertical: 16,
-    paddingHorizontal: 10,
-    marginBottom: 12,
-  },
-  spanCard: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  halfCard: {
-    width: '48%',
+    borderRadius: 16,
+    width: '48%',         // 2 per row
+    height: 120,          // 🔥 fixed equal height
+    marginBottom: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,         // Android shadow
+    shadowColor: '#000',  // iOS shadow
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
   label: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
   },
   count: {
-    fontSize: 16,
+    fontSize: 25,
     color: '#fff',
     fontWeight: 'bold',
-    marginTop: 8,
   },
 });

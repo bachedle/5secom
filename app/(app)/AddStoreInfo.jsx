@@ -35,7 +35,7 @@ const AddStoreInfo = () => {
   const selectedStoreType = draftOrder.facilityType?.id || "";
   const selectedStore = draftOrder.orgUnit?.id || "";
   const selectedCountry = draftOrder.country || "";
-  const sku = draftOrder.skuOpt || "";  
+  const sku = draftOrder.code || "";  
   const orderId = draftOrder.idNumber || "";    
   const isPriority = draftOrder.isPriority || false;
 
@@ -133,14 +133,14 @@ const AddStoreInfo = () => {
               placeholder=""
               style={styles.input}
               value={sku}
-              onChangeText={(text) => updateDraftPath("sku", text)}
+              onChangeText={(text) => updateDraftPath("code", text)}
             />
 
             <Text style={styles.subText}>Order ID</Text>
             <TextInput
               style={styles.input}
               value={orderId}
-              onChangeText={(text) => updateDraftPath("code", text)} // ✅ FIXED
+              onChangeText={(text) => updateDraftPath("idNumber", text)} // ✅ FIXED
             />
 
             {/* Switch */}

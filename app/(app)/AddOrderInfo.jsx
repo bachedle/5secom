@@ -206,8 +206,8 @@ const handleSkuChange = (val) => {
             <Text style={styles.subText}>Loại hàng</Text>
             <View style={styles.pickerWrapper}>
               <Picker
-                selectedValue={ draftOrder.labeling || "" }
-                onValueChange={(value) => updateDraftPath("labeling", value)}
+                selectedValue={ draftOrder.labelingStandard || "" }
+                onValueChange={(value) => updateDraftPath("labelingStandard", value)}
               >
                 <Picker.Item label="Chọn loại hàng" value="" />
                 {labeling.map((l) => (
