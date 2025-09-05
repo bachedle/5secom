@@ -12,15 +12,16 @@ import {
   SafeAreaView,
   TouchableWithoutFeedback,
   Alert,
-} from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import { Picker } from '@react-native-picker/picker';
-import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import * as ImagePicker from 'expo-image-picker';
+} from "react-native";
+import * as SecureStore from "expo-secure-store";
+import { Picker } from "@react-native-picker/picker";
+import { useRouter } from "expo-router";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import * as ImagePicker from "expo-image-picker";
 
-import { useOrder } from '../../utils/orderContext';
+import { useOrder } from "../../utils/orderContext";
+import { uploadFile } from "../../api/file";
 
 const API_URL = "https://5secom.dientoan.vn/api";
 
@@ -29,13 +30,11 @@ const AddOrderInfo = () => {
   const router = useRouter();
 
   const [skuOptions, setSkuOptions] = useState([]);
-  const [allSizes, setAllSizes] = useState([]);  // full list from API
-  const [filteredSizes, setFilteredSizes] = useState([]); // based on sku
-
+  const [allSizes, setAllSizes] = useState([]);
+  const [filteredSizes, setFilteredSizes] = useState([]);
   const [orderType, setOrderType] = useState([]);
-
   const [labeling, setLabeling] = useState([]);
-  const [image, setImage] = useState('');
+  const [image, setImage] = useState("");
   const [imgRatio, setImgRatio] = useState(1);
 
   const handleBack = () => router.back();
@@ -44,11 +43,11 @@ const AddOrderInfo = () => {
   const handleSave = async () => {
     try {
       await submitDraft();
-      Alert.alert('Thành công', 'Đơn hàng đã được tạo!');
-      router.replace('/ProductList');
+      Alert.alert("Thành công", "Đơn hàng đã được tạo!");
+      router.replace("/ProductList");
     } catch (e) {
       console.error(e);
-      Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
+      Alert.alert("Lỗi", "Không thể tạo đơn hàng");
     }
   };
 
@@ -64,10 +63,10 @@ const AddOrderInfo = () => {
       for (const key in keep) {
         updateDraftPath(key, keep[key]);
       }
-      Alert.alert('Thành công', 'Đã lưu và tiếp tục tạo đơn mới');
+      Alert.alert("Thành công", "Đã lưu và tiếp tục tạo đơn mới");
     } catch (e) {
       console.error(e);
-      Alert.alert('Lỗi', 'Không thể tạo đơn hàng');
+      Alert.alert("Lỗi", "Không thể tạo đơn hàng");
     }
   };
 
@@ -88,6 +87,7 @@ const AddOrderInfo = () => {
         );
         setAllSizes(sizeRes.data.content);
         setFilteredSizes(sizeRes.data.content);
+
         const orderTypeRes = await axios.get(
           `${API_URL}/option/find?optionGroupCode=facility-type`,
           { headers }
@@ -98,7 +98,7 @@ const AddOrderInfo = () => {
           `${API_URL}/option/find?optionGroupCode=skudesigns`,
           { headers }
         );
-        setSkuOptions(skuRes.data.content); 
+        setSkuOptions(skuRes.data.content);
 
         const labelingStandardRes = await axios.get(
           `${API_URL}/option/find?optionGroupCode=type-of-goods`,
@@ -106,41 +106,56 @@ const AddOrderInfo = () => {
         );
         setLabeling(labelingStandardRes.data.content);
       } catch (error) {
-        console.error("Error fetching options:", error.response?.data || error.message);
+        console.error(
+          "Error fetching options:",
+          error.response?.data || error.message
+        );
       }
     };
     fetchOptions();
   }, []);
 
-const handleSkuChange = (val) => {
-  updateDraftPath("skuOpt", { id: val });
-
-  // Example: if sizes are linked by parentId = skuId
-  const relevantSizes = allSizes.filter((s) => s.skuOpt?.id === val);
-
-  setFilteredSizes(relevantSizes);
-  updateDraftPath("stateOpt", { id: "" }); // reset size if sku changed
-};
-
-
+  const handleSkuChange = (val) => {
+    updateDraftPath("skuOpt", { id: val });
+    const relevantSizes = allSizes.filter((s) => s.skuOpt?.id === val);
+    setFilteredSizes(relevantSizes);
+    updateDraftPath("stateOpt", { id: "" }); // reset size if sku changed
+  };
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      alert('Bạn cần cấp quyền truy cập ảnh để tiếp tục.');
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Quyền bị từ chối", "Bạn cần cấp quyền để chọn ảnh.");
       return;
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       quality: 1,
     });
 
-    if (!result.canceled) {
-      const { uri, width, height } = result.assets[0];
-      setImage(uri);
-      setImgRatio(width / height);
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+    const file = {
+      uri: asset.uri,
+      name: asset.fileName || "upload.jpg",
+      type: asset.mimeType || "image/jpeg",
+    };
+
+    try {
+      const data = await uploadFile(file);
+      const fileId = data?.id;
+      if (!fileId) {
+        Alert.alert("Lỗi", "Tải ảnh thất bại. Vui lòng thử lại.");
+        return;
+      }
+      updateDraftPath("sampleSource", fileId);
+      setImage(asset.uri);
+    } catch (err) {
+      console.error("Upload error:", err?.response?.data || err.message);
+      Alert.alert("Lỗi", "Không thể tải ảnh.");
     }
   };
 
@@ -155,7 +170,7 @@ const handleSkuChange = (val) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <ScrollView
             contentContainerStyle={styles.contentWrapper}
@@ -169,7 +184,7 @@ const handleSkuChange = (val) => {
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={draftOrder.skuOpt?.id || ""}
-                onValueChange={handleSkuChange} // ✅ updates size on change
+                onValueChange={handleSkuChange}
               >
                 <Picker.Item label="Chọn SKU Design" value="" />
                 {skuOptions.map((opt) => (
@@ -190,7 +205,6 @@ const handleSkuChange = (val) => {
                   <Picker.Item key={s.id} label={s.name} value={s.id} />
                 ))}
               </Picker>
-
             </View>
 
             {/* Số lượng */}
@@ -198,7 +212,7 @@ const handleSkuChange = (val) => {
             <TextInput
               style={styles.input}
               keyboardType="numeric"
-              value={draftOrder.area ? String(draftOrder.area) : ''}
+              value={draftOrder.area ? String(draftOrder.area) : ""}
               onChangeText={(text) => updateDraftPath("area", text)}
             />
 
@@ -215,33 +229,31 @@ const handleSkuChange = (val) => {
             <Text style={styles.subText}>Loại hàng</Text>
             <View style={styles.pickerWrapper}>
               <Picker
-                selectedValue={ draftOrder.labelingStandard || "" }
-                onValueChange={(value) => updateDraftPath("labelingStandard", value)}
+                selectedValue={draftOrder.labelingStandard || ""}
+                onValueChange={(value) =>
+                  updateDraftPath("labelingStandard", value)
+                }
               >
                 <Picker.Item label="Chọn loại hàng" value="" />
                 {labeling.map((l) => (
                   <Picker.Item key={l.id} label={l.name} value={l.name} />
                 ))}
-
               </Picker>
             </View>
 
             {/* Hình ảnh */}
             <Text style={styles.subText}>Hình ảnh</Text>
-            <TouchableOpacity
-              style={styles.uploadButton}
-              onPress={pickImage}
-            >
-              <Text style={{ color: '#555' }}>
-                {image ? 'Ảnh đã chọn' : 'Chọn hoặc tải ảnh lên'}
+            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+              <Text style={{ color: "#555" }}>
+                {image ? "Ảnh đã chọn" : "Chọn hoặc tải ảnh lên"}
               </Text>
             </TouchableOpacity>
 
             {image && (
-              <View style={{ marginVertical: 8, width:'100%', aspectRatio: imgRatio }}>
+              <View style={{ marginVertical: 8, width: "100%", aspectRatio: imgRatio }}>
                 <Image
                   source={{ uri: image }}
-                  style={{ flex:1, borderRadius: 8 }}
+                  style={{ flex: 1, borderRadius: 8 }}
                   resizeMode="cover"
                 />
               </View>
@@ -252,7 +264,9 @@ const handleSkuChange = (val) => {
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={draftOrder.facilityType?.id || ""}
-                onValueChange={(value) => updateDraftPath("facilityType", { id: value })}
+                onValueChange={(value) =>
+                  updateDraftPath("facilityType", { id: value })
+                }
               >
                 <Picker.Item label="Chọn trạng thái" value="" />
                 {orderType.map((ot) => (
@@ -288,92 +302,92 @@ const handleSkuChange = (val) => {
 export default AddOrderInfo;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9f9f9' },
+  container: { flex: 1, backgroundColor: "#f9f9f9" },
   header: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingTop: 50,
     paddingBottom: 16,
     paddingHorizontal: 20,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
     borderBottomWidth: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
   },
-  headerText: { fontSize: 22, fontWeight: 'bold' },
+  headerText: { fontSize: 22, fontWeight: "bold" },
   contentWrapper: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     margin: 10,
     paddingVertical: 20,
     paddingHorizontal: 20,
     paddingBottom: 100,
   },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-  subText: { fontSize: 13, fontWeight: 'bold', marginTop: 12 },
+  title: { fontSize: 20, fontWeight: "bold", marginBottom: 20 },
+  subText: { fontSize: 13, fontWeight: "bold", marginTop: 12 },
   input: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: "#dd6b4d",
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginVertical: 8,
     fontSize: 13,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: "#dd6b4d",
     borderRadius: 8,
     marginVertical: 8,
-    backgroundColor: '#fff',
-    overflow: 'hidden',
+    backgroundColor: "#fff",
+    overflow: "hidden",
   },
   uploadButton: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: "#dd6b4d",
     borderRadius: 8,
     padding: 15,
     marginVertical: 8,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
     padding: 16,
     bottom: 50,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   cancelButton: {
-    backgroundColor: '#fff',
-    borderColor: '#dd6b4d',
+    backgroundColor: "#fff",
+    borderColor: "#dd6b4d",
     borderWidth: 2,
     paddingVertical: 12,
-    width: '48%',
+    width: "48%",
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   saveButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: "#dd6b4d",
     paddingVertical: 12,
-    width: '48%',
+    width: "48%",
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  cancelText: { color: '#dd6b4d', fontSize: 16, fontWeight: 'bold' },
-  saveText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  cancelText: { color: "#dd6b4d", fontSize: 16, fontWeight: "bold" },
+  saveText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   saveContinueButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: "#dd6b4d",
     paddingVertical: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
-  saveContinueText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  saveContinueText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });

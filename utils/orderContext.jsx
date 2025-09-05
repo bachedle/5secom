@@ -31,6 +31,7 @@ const initialDraft = {
   sku: null,
   code: null,
   idNumber: null,
+  sampleSource: null,
   isPriority: false,
   note: null,
   attr1: null,
