@@ -1,13 +1,25 @@
 import axios from "axios";
-import * as SecureStore from "expo-secure-store";   
+import * as SecureStore from "expo-secure-store";
+import * as FileSystem from "expo-file-system";
 
 const API_URL = "https://5secom.dientoan.vn/api";
 
+// ✅ Convert local URI to Base64
+export const localUriToBase64 = async (uri, mimeType = "image/jpeg") => {
+  try {
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+    return `data:${mimeType};base64,${base64}`;
+  } catch (err) {
+    console.error("Error converting local URI to Base64:", err);
+    throw err;
+  }
+};
+
+// Upload file to backend
 export const uploadFile = async (file) => {
   try {
     const token = await SecureStore.getItemAsync("authToken");
 
-    // ✅ Build FormData with raw file blob
     const formData = new FormData();
     formData.append("file", {
       uri: file.uri,
@@ -23,6 +35,7 @@ export const uploadFile = async (file) => {
       },
     });
 
+    console.log("Upload response:", res.data);
     return res.data; // { url: "...", id: "..." }
   } catch (err) {
     console.error("Upload failed:", err?.response?.data || err.message);

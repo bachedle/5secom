@@ -21,7 +21,7 @@ import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 
 import { useOrder } from "../../utils/orderContext";
-import { uploadFile } from "../../api/file";
+import { uploadFile, localUriToBase64 } from "../../api/file";
 
 const API_URL = "https://5secom.dientoan.vn/api";
 
@@ -130,29 +130,58 @@ const AddOrderInfo = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
     });
 
     if (result.canceled) return;
-
     const asset = result.assets[0];
-    const file = {
-      uri: asset.uri,
-      name: asset.fileName || "upload.jpg",
-      type: asset.mimeType || "image/jpeg",
-    };
 
     try {
+      console.log("Image selected:", asset.uri);
+      console.log("File size:", asset.fileSize);
+      console.log("MIME type:", asset.mimeType);
+
+      const file = {
+        uri: asset.uri,
+        name: asset.fileName || "upload.jpg",
+        type: asset.mimeType || "image/jpeg",
+      };
+
+      console.log("Starting upload...");
       const data = await uploadFile(file);
-      const fileId = data?.id;
-      if (!fileId) {
+      console.log("Upload completed:", data);
+
+      const fileId = data?.id || data?.fileId || data?.uuid;
+      const fileUrl = data?.url || data?.fileUrl || data;
+      const serverBase64 = data?.base64;
+
+      if (!fileId && !fileUrl) {
         Alert.alert("Lỗi", "Tải ảnh thất bại. Vui lòng thử lại.");
         return;
       }
-      updateDraftPath("sampleSource", fileId);
-      setImage(asset.uri);
+
+      updateDraftPath("sampleSource", fileId || fileUrl);
+
+      // Priority: server base64 > convert URL to base64 > local URI
+      if (serverBase64) {
+        setImage(serverBase64);
+        console.log("Using server base64");
+      } else if (fileUrl && typeof fileUrl === "string") {
+        console.log("Converting uploaded image URL to base64...");
+        try {
+          const imageBase64 = await localUriToBase64(fileUrl, file.type);
+          setImage(imageBase64);
+          console.log("Successfully converted URL to base64");
+        } catch (base64Error) {
+          console.error("Failed to convert URL to base64:", base64Error);
+          setImage(asset.uri); // Fallback to local URI
+        }
+      } else {
+        setImage(asset.uri);
+        console.log("Using local URI");
+      }
     } catch (err) {
       console.error("Upload error:", err?.response?.data || err.message);
       Alert.alert("Lỗi", "Không thể tải ảnh.");
@@ -198,7 +227,9 @@ const AddOrderInfo = () => {
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={draftOrder.stateOpt?.id || ""}
-                onValueChange={(value) => updateDraftPath("stateOpt", { id: value })}
+                onValueChange={(value) =>
+                  updateDraftPath("stateOpt", { id: value })
+                }
               >
                 <Picker.Item label="Chọn kích thước" value="" />
                 {filteredSizes.map((s) => (
@@ -243,14 +274,19 @@ const AddOrderInfo = () => {
 
             {/* Hình ảnh */}
             <Text style={styles.subText}>Hình ảnh</Text>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={pickImage}
+            >
               <Text style={{ color: "#555" }}>
                 {image ? "Ảnh đã chọn" : "Chọn hoặc tải ảnh lên"}
               </Text>
             </TouchableOpacity>
 
             {image && (
-              <View style={{ marginVertical: 8, width: "100%", aspectRatio: imgRatio }}>
+              <View
+                style={{ marginVertical: 8, width: "100%", aspectRatio: imgRatio }}
+              >
                 <Image
                   source={{ uri: image }}
                   style={{ flex: 1, borderRadius: 8 }}
