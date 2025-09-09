@@ -21,7 +21,7 @@ import axios from "axios";
 import * as ImagePicker from "expo-image-picker";
 
 import { useOrder } from "../../utils/orderContext";
-import { uploadFile, localUriToBase64 } from "../../api/file";
+import { uploadFile } from "../../api/file";
 
 const API_URL = "https://5secom.dientoan.vn/api";
 
@@ -134,7 +134,7 @@ const AddOrderInfo = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 1,
     });
@@ -159,33 +159,33 @@ const AddOrderInfo = () => {
 
       const fileId = data?.id || data?.fileId || data?.uuid;
       const fileUrl = data?.url || data?.fileUrl || data;
-      const serverBase64 = data?.base64;
 
       if (!fileId && !fileUrl) {
         Alert.alert("Lỗi", "Tải ảnh thất bại. Vui lòng thử lại.");
         return;
       }
 
-      updateDraftPath("sampleSource", fileId || fileUrl);
 
-      // Priority: server base64 > convert URL to base64 > local URI
-      if (serverBase64) {
-        setImage(serverBase64);
-        console.log("Using server base64");
-      } else if (fileUrl && typeof fileUrl === "string") {
-        console.log("Converting uploaded image URL to base64...");
-        try {
-          const imageBase64 = await localUriToBase64(fileUrl, file.type);
-          setImage(imageBase64);
-          console.log("Successfully converted URL to base64");
-        } catch (base64Error) {
-          console.error("Failed to convert URL to base64:", base64Error);
-          setImage(asset.uri); // Fallback to local URI
-        }
-      } else {
+      updateDraftPath("sampleSource", fileId ? fileUrl : "");
+
+      // // Priority: server base64 > convert URL to base64 > local URI
+      // if (serverBase64) {
+      //   setImage(serverBase64);
+      //   console.log("Using server base64");
+      // } else if (fileUrl && typeof fileUrl === "string") {
+      //   console.log("Converting uploaded image URL to base64...");
+      //   try {
+      //     const imageBase64 = await localUriToBase64(fileUrl, file.type);
+      //     setImage(imageBase64);
+      //     console.log("Successfully converted URL to base64");
+      //   } catch (base64Error) {
+      //     console.error("Failed to convert URL to base64:", base64Error);
+      //     setImage(asset.uri); // Fallback to local URI
+      //   }
+      // } else {
         setImage(asset.uri);
         console.log("Using local URI");
-      }
+      
     } catch (err) {
       console.error("Upload error:", err?.response?.data || err.message);
       Alert.alert("Lỗi", "Không thể tải ảnh.");

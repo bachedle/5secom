@@ -6,7 +6,10 @@ import {
   Pressable,
   TextInput,
   KeyboardAvoidingView,
+  Image,
   Platform,
+  Touchable,
+  TouchableOpacity,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 const ModalTest = ({ visible, onClose, orderItem }) => {
@@ -37,7 +40,21 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
 
           {/* Image Placeholder */}
           <Text style={styles.label}>Hình Ảnh:</Text>
-          <View style={styles.imagePlaceholder} />
+
+          <View style={styles.imagePlaceholder}>  
+            {orderItem?.sampleSource ? (
+              <TouchableOpacity onPress={() => {}}>
+                <Image 
+                source={{ uri: orderItem.sampleSource }}
+                
+                style={{ width: '100%', height: '100%', borderRadius: 6 }}
+                resizeMode="cover"
+              />
+              </TouchableOpacity>
+            ) : (
+              <Text style={{ color: '#666', textAlign: 'center', marginTop: 40 }}>Chưa có hình</Text>
+            )}
+          </View>
 
           {/* File Link with Icon */}
           <View style={styles.linkRow}>
