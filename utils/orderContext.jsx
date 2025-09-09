@@ -31,6 +31,7 @@ const initialDraft = {
   sku: null,
   code: null,
   idNumber: null,
+  sampleSource: null,
   isPriority: false,
   note: null,
   attr1: null,
@@ -62,6 +63,11 @@ export const OrderProvider = ({ children }) => {
   const [totalOrders, setTotalOrders] = useState(0); 
   const [loading, setLoading] = useState(false);
   const [draftOrder, setDraftOrder] = useState(initialDraft);
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true); 
+  const [loadingMore, setLoadingMore] = useState(false);
+
 
   // Load saved draft
   useEffect(() => {
@@ -103,23 +109,37 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  const fetchOrders = async () => {
-    if (!isLoggedIn || !token) {
-      console.log("User not authenticated");
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await getOrders(token);
+  const fetchOrders = async (pageNumber = 1, pageSize = 20) => {
+  if (!isLoggedIn || !token) {
+    console.log("User not authenticated");
+    return;
+  }
+
+  if (pageNumber === 1) setLoading(true);
+  else setLoadingMore(true);
+
+  try {
+    const data = await getOrders(token, pageNumber, pageSize);
+
+    if (pageNumber === 1) {
       setOrders(data?.content || data || []);
-      setTotalOrders(data?.totalElements || 0); 
-    } catch (err) {
-      console.error("Error fetching orders:", err);
-      setOrders([]);
-    } finally {
-      setLoading(false);
+    } else {
+      setOrders(prev => [...prev, ...(data?.content || data || [])]);
     }
-  };
+
+    setTotalOrders(data?.totalElements || 0);
+    setHasMore((data?.content?.length || 0) === pageSize);
+    setPage(pageNumber);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    if (pageNumber === 1) setOrders([]);
+  } finally {
+    if (pageNumber === 1) setLoading(false);
+    else setLoadingMore(false);
+  }
+};
+
+
 
   const addOrder = async (newOrder) => {
     if (!isLoggedIn || !token) {
@@ -190,6 +210,10 @@ export const OrderProvider = ({ children }) => {
       submitDraft,
       draft: draftOrder,
       setDraft: setDraftOrder,
+      page,
+      hasMore,
+      loadingMore,
+
     }),
     [orders, loading, draftOrder]
   );
