@@ -115,12 +115,16 @@ const AddOrderInfo = () => {
     fetchOptions();
   }, []);
 
+  // const handleSkuChange = (val) => {
+  //   updateDraftPath("skuOpt", { id: val });
+  //   const relevantSizes = allSizes.filter((s) => s.skuOpt?.id === val);
+  //   setFilteredSizes(relevantSizes);
+  //   updateDraftPath("stateOpt", { id: "" }); // reset size if sku changed
+  // };
+
   const handleSkuChange = (val) => {
-    updateDraftPath("skuOpt", { id: val });
-    const relevantSizes = allSizes.filter((s) => s.skuOpt?.id === val);
-    setFilteredSizes(relevantSizes);
-    updateDraftPath("stateOpt", { id: "" }); // reset size if sku changed
-  };
+  updateDraftPath("skuOpt", { id: val });
+};
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -232,7 +236,7 @@ const AddOrderInfo = () => {
                 }
               >
                 <Picker.Item label="Chọn kích thước" value="" />
-                {filteredSizes.map((s) => (
+                {allSizes.map((s) => (
                   <Picker.Item key={s.id} label={s.name} value={s.id} />
                 ))}
               </Picker>

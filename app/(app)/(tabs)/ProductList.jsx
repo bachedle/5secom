@@ -29,7 +29,8 @@
     const [selectedStatus, setSelectedStatus] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
 
-    const { orders, loading } = useContext(OrderContext);
+    const { orders, loading, fetchOrders, page, hasMore, loadingMore } = useContext(OrderContext);
+    
     
 
     const handleStatusFilterChange = (status) => setSelectedStatus(status);
@@ -45,8 +46,14 @@
       (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
     const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
     const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
-    return isUnassigned && searchMatch && statusMatch && dateMatch;
+    return  searchMatch && statusMatch && dateMatch;
   });
+
+  const loadMoreData = () => {
+    if (loadingMore || !hasMore) return;
+    fetchOrders(page + 1);
+  };
+
 
     // const handleBack = () => {
     //   router.dismiss();
@@ -163,11 +170,23 @@
         {/* Order List */}
         <FlatList
           data={filteredOrders}
-          renderItem={({ item }) => <OrderListItem orderItem={item} />}
-          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
-          contentContainerStyle={styles.CARDS_WRAPPER}
-          refreshing={loading}
+          keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
+          renderItem={({ item }) => (
+            <OrderListItem orderItem={item} />
+          )}
+          onEndReached={loadMoreData}
+          onEndReachedThreshold={0.2}
+          ListFooterComponent={
+            loadingMore ? (
+              <Text style={{ color: '#E8775D',  textAlign: "center", padding: 12 }}>
+                Đang tải thêm...
+              </Text>
+            ) : null
+          }
+            contentContainerStyle={{ paddingBottom: 80 }}   
+
         />
+
       </View>
     );
   };

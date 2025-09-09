@@ -32,7 +32,7 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
 
           {/* Product Name */}
           <Text style={styles.label}>
-            Sản Phẩm: <Text style={styles.bold}>{orderItem.labelingStandard}</Text>
+            Sản Phẩm: <Text style={styles.bold}>{orderItem?.labelingStandard || "--"}</Text>
           </Text>
 
           {/* Image Placeholder */}
