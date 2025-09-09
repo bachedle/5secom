@@ -17,16 +17,22 @@ const HomePage = () => {
   }).toUpperCase();
 
   const { orders } = useContext(OrderContext);
+function isSameDay(date1, date2) {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
+}
+
+const ordersForDate = orders.filter(order => {
+  if (!order.createdDate) return false;
+  const orderDate = new Date(order.createdDate); // parse ISO from backend
+  return isSameDay(orderDate, selectedDate);
+});
 
 
-  const ordersForDate = orders.filter(order => {
-    const orderDate = new Date(order.createdDate); // adjust field name!
-    return (
-      orderDate.getFullYear() === selectedDate.getFullYear() &&
-      orderDate.getMonth() === selectedDate.getMonth() &&
-      orderDate.getDate() === selectedDate.getDate()
-    );
-  });
+
 
 
 
