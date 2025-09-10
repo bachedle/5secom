@@ -29,7 +29,7 @@
     const [selectedStatus, setSelectedStatus] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
 
-    const { orders, loading, fetchOrders } = useContext(OrderContext);
+    const { orders, loading, fetchOrders, hasMore,loadingMore, page } = useContext(OrderContext);
     
     
 
@@ -164,8 +164,12 @@
           data={filteredOrders}
           keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
           renderItem={({ item }) => <OrderListItem orderItem={item} />}
-          refreshing={loading}
-          onRefresh={fetchOrders} // reload everything
+          // refreshing={loading}
+          // onRefresh={fetchOrders} // reload everything
+            onEndReached={() => {
+            if (hasMore && !loadingMore) fetchOrders(page);
+          }}
+          onEndReachedThreshold={0.5}
           contentContainerStyle={{ paddingBottom: 80 }}
           ListEmptyComponent={
             !loading && (

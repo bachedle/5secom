@@ -122,7 +122,7 @@ const fetchOrders = async () => {
     setOrders(allOrders);
     setTotalOrders(data?.totalElements || allOrders.length);
 
-    setHasMore(false);  // disable infinite scroll
+    // setHasMore(false);  // disable infinite scroll
     setPage(0);
   } catch (err) {
     console.error("Error fetching orders:", err);
@@ -131,11 +131,6 @@ const fetchOrders = async () => {
     setLoading(false);
   }
 };
-
-
-
-
-
 
 
 

@@ -7,6 +7,20 @@ const API_URL = "https://5secom.dientoan.vn/api";
 // GET all orders
 // GET all orders (fetch large size at once)
 // GET all orders (fetch all pages until complete)
+
+// GET single page of orders (for infinite scroll)
+// export const getOrdersPage = async (token, page = 0, size = 20) => {
+//   const res = await axios.get(`${API_URL}/facility/find`, {
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//       'Content-Type': 'application/json',
+//       'Accept': 'application/json',
+//     },
+//     params: { page, size },
+//   });
+//   return res.data;
+// };
+
 export const getOrders = async (token) => {
   try {
     let allOrders = [];
@@ -46,6 +60,8 @@ export const getOrders = async (token) => {
     throw error;
   }
 };
+
+
 
 
 
