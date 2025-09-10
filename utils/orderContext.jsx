@@ -9,7 +9,6 @@ export const OrderContext = createContext();
 const initialDraft = {
   version: 0,
   id: null,
-  code: null,
   name: null,
   address: null,
   phone: null,
@@ -109,35 +108,34 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  const fetchOrders = async (pageNumber = 1, pageSize = 20) => {
-  if (!isLoggedIn || !token) {
-    console.log("User not authenticated");
-    return;
-  }
-
-  if (pageNumber === 1) setLoading(true);
-  else setLoadingMore(true);
+const fetchOrders = async () => {
+  if (!isLoggedIn || !token) return;
+  setLoading(true);
 
   try {
-    const data = await getOrders(token, pageNumber, pageSize);
+    const data = await getOrders(token);   // no more pageNumber/pageSize
+    const allOrders = data?.content || [];
 
-    if (pageNumber === 1) {
-      setOrders(data?.content || data || []);
-    } else {
-      setOrders(prev => [...prev, ...(data?.content || data || [])]);
-    }
+    // sort latest first
+    allOrders.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
 
-    setTotalOrders(data?.totalElements || 0);
-    setHasMore((data?.content?.length || 0) === pageSize);
-    setPage(pageNumber);
+    setOrders(allOrders);
+    setTotalOrders(data?.totalElements || allOrders.length);
+
+    setHasMore(false);  // disable infinite scroll
+    setPage(0);
   } catch (err) {
     console.error("Error fetching orders:", err);
-    if (pageNumber === 1) setOrders([]);
+    setOrders([]);
   } finally {
-    if (pageNumber === 1) setLoading(false);
-    else setLoadingMore(false);
+    setLoading(false);
   }
 };
+
+
+
+
+
 
 
 
