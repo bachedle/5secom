@@ -13,7 +13,7 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
   const [modalVisible, setModalVisible] = useState(false);
 
   // 🔹 Normalize data in one place
-  const orderCode = orderItem.code || orderItem.idNumber || '---';
+  const orderCode = orderItem.idNumber || '---';
 
 
   

@@ -58,19 +58,23 @@ const ModalFilter = ({
           {/* Status Picker */}
           <Text style={styles.label}>Trạng thái</Text>
           <Picker
-            style = {{ backgroundColor: '#f0f0f0'}}
+            style={{ backgroundColor: '#f0f0f0' }}
             selectedValue={selectedOrder}
             onValueChange={(itemValue) => setSelectedOrder(itemValue)}
           >
+            {/* Default option */}
+            <Picker.Item label="Tất cả" value="" />
 
-            {/* lấy từ option group */}
-            <Picker.Item label= "Tất cả" value=""/>
-            {[...facilityTypes] 
-              .sort((a, b) => a.orderNo - b.orderNo) 
-              .map((ft) => (
-                <Picker.Item key={ft.id} label={ft.name} value={ft.name} />
-            ))}
-
+            {/* Null-safe sort and mapping */}
+            {[...facilityTypes]
+              .sort((a, b) => (a?.orderNo ?? Infinity) - (b?.orderNo ?? Infinity))
+              .map((ft, idx) => (
+                <Picker.Item
+                  key={ft?.id ?? idx}             // fallback key if ft is null
+                  label={ft?.name ?? '—'}         // fallback label
+                  value={ft?.name ?? ''}          // fallback value
+                />
+              ))}
           </Picker>
 
           {/* Delivery Date Picker */}

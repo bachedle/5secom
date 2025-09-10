@@ -29,7 +29,7 @@
     const [selectedStatus, setSelectedStatus] = useState('');
     const [selectedDate, setSelectedDate] = useState(null);
 
-    const { orders, loading, fetchOrders, page, hasMore, loadingMore } = useContext(OrderContext);
+    const { orders, loading, fetchOrders } = useContext(OrderContext);
     
     
 
@@ -46,18 +46,10 @@
       (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
     const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
     const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
-    return  searchMatch && statusMatch && dateMatch;
+    return  searchMatch && statusMatch && dateMatch 
+    && isUnassigned
+    ;
   });
-
-  const loadMoreData = () => {
-    if (loadingMore || !hasMore) return;
-    fetchOrders(page + 1);
-  };
-
-
-    // const handleBack = () => {
-    //   router.dismiss();
-    // };
 
     const facilityTypes = Array.from(
       new Map(orders.map(o => [o.facilityType?.id, o.facilityType])).values()
@@ -171,21 +163,19 @@
         <FlatList
           data={filteredOrders}
           keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
-          renderItem={({ item }) => (
-            <OrderListItem orderItem={item} />
-          )}
-          onEndReached={loadMoreData}
-          onEndReachedThreshold={0.2}
-          ListFooterComponent={
-            loadingMore ? (
-              <Text style={{ color: '#E8775D',  textAlign: "center", padding: 12 }}>
-                Đang tải thêm...
+          renderItem={({ item }) => <OrderListItem orderItem={item} />}
+          refreshing={loading}
+          onRefresh={fetchOrders} // reload everything
+          contentContainerStyle={{ paddingBottom: 80 }}
+          ListEmptyComponent={
+            !loading && (
+              <Text style={{ textAlign: "center", color: "#888", marginTop: 20 }}>
+                Không có đơn nào
               </Text>
-            ) : null
+            )
           }
-            contentContainerStyle={{ paddingBottom: 80 }}   
-
         />
+
 
       </View>
     );
