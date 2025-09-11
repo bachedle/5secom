@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState} from "react";
 import {
   Modal,
   StyleSheet,
   View,
   Text,
   Pressable,
+  Alert,
   TextInput,
   KeyboardAvoidingView,
   Image,
@@ -12,8 +13,61 @@ import {
   TouchableOpacity,
 } from "react-native";
 
+import { useOrder } from "../utils/orderContext";
+import { useAuth } from "../utils/authContext";
+
 const ModalTest = ({ visible, onClose, orderItem }) => {
   const [showFullImage, setShowFullImage] = useState(false);
+
+  const [isAccepting, setIsAccepting] = useState(false);
+  const { editOrder } = useOrder();
+  const { user } = useAuth(); 
+
+const handleAcceptOrder = async () => {
+  if (!orderItem || !user) return;
+
+  // Log before assignment
+  console.log("BEFORE ASSIGNMENT:");
+  console.log("Order ID:", orderItem.id);
+  console.log("Current issuePlace:", orderItem.issuePlace);
+  console.log("User credname:", user.credname);
+  console.log("Full user object:", user); 
+
+
+
+
+  const isAlreadyAssigned = orderItem.issuePlace && orderItem.issuePlace !== 'unassigned';
+  if (isAlreadyAssigned) {
+    Alert.alert("Đơn hàng đã được nhận");
+    return;
+  }
+
+  setIsAccepting(true);
+  try {
+    const updates = {
+      id: orderItem.id,
+      version: orderItem.version,
+      issuePlace: user.name
+    };
+
+    // Log the update payload
+    console.log("PATCH PAYLOAD:", updates);
+
+    await editOrder(orderItem.id, updates);
+    
+    // Log success
+    console.log("ASSIGNMENT SUCCESSFUL for Order ID:", orderItem.id);
+    
+    Alert.alert("Nhận đơn thành công!");
+    onClose();
+  } catch (error) {
+    console.log("ASSIGNMENT FAILED:");
+    console.log("Error:", error);
+    Alert.alert("Lỗi", "Không thể nhận đơn");
+  } finally {
+    setIsAccepting(false);
+  }
+};
 
   return (
     <>
@@ -71,8 +125,14 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
               <Pressable style={[styles.outlinedButton, styles.buttonSpacing]} onPress={onClose}>
                 <Text style={styles.outlinedText}>Quay Lại</Text>
               </Pressable>
-              <Pressable style={styles.filledButton}>
-                <Text style={styles.filledText}>Nhận Đơn</Text>
+              <Pressable 
+                style={styles.filledButton}
+                onPress={handleAcceptOrder}
+                disabled={isAccepting}
+              >
+                <Text style={styles.filledText}>
+                  {isAccepting ? "Đang xử lý..." : "Nhận Đơn"}
+                </Text>
               </Pressable>
             </View>
           </View>

@@ -7,20 +7,6 @@ const API_URL = "https://5secom.dientoan.vn/api";
 // GET all orders
 // GET all orders (fetch large size at once)
 // GET all orders (fetch all pages until complete)
-
-// GET single page of orders (for infinite scroll)
-// export const getOrdersPage = async (token, page = 0, size = 20) => {
-//   const res = await axios.get(`${API_URL}/facility/find`, {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//       'Content-Type': 'application/json',
-//       'Accept': 'application/json',
-//     },
-//     params: { page, size },
-//   });
-//   return res.data;
-// };
-
 export const getOrders = async (token) => {
   try {
     let allOrders = [];
@@ -63,8 +49,6 @@ export const getOrders = async (token) => {
 
 
 
-
-
 // GET order by ID
 export const getOrderByID = async (id) => {
     const res = await axios.get(`${API_URL}/facility/${id}`);
@@ -87,7 +71,7 @@ export const createOrder = async (order) => {
 // UPDATE order
 export const updateOrder = async (id, order) => {
   const token = await SecureStore.getItemAsync('authToken');
-  const res = await axios.patch(`${API_URL}/facility/${id}`, order, {
+  const res = await axios.patch(`${API_URL}/facility`, order, {  // Remove /${id}
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -97,8 +81,3 @@ export const updateOrder = async (id, order) => {
   return res.data;
 };
 
-// // DELETE order
-// export const deleteOrder = async (id) => {
-//   const res = await axios.delete(`${API_URL}/facility`);
-//   return res.data;
-// };
