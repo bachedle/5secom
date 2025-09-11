@@ -3,14 +3,51 @@ import {
   StyleSheet,
   View,
   Text,
+  
   Pressable,
   TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { Picker } from "@react-native-picker/picker";
+import * as SecureStore from 'expo-secure-store';
+import axios from 'axios';
+import { useOrder } from "../utils/orderContext";
+import { useAuth } from "../utils/authContext";
+import { useEffect, useState } from 'react';
+
+const API_URL = "https://5secom.dientoan.vn/api";
 
 const ModalAccepted = ({ visible, onClose, orderItem }) => {
+    const { draftOrder, updateDraftPath, submitDraft } = useOrder();
+    const [orderType, setOrderType] = useState([]);
+    
+  
+
+
+    useEffect(() => {
+      const fetchOptions = async () => {
+        try {
+          const token = await SecureStore.getItemAsync("authToken");
+          const headers = {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          };
+
+      const orderTypeRes = await axios.get(
+          `${API_URL}/option/find?optionGroupCode=facility-type`,
+          { headers }
+        );
+        setOrderType(orderTypeRes.data.content);
+      } catch (error) {
+        console.error("Error fetching order types:", error);
+      }
+    };
+    fetchOptions();
+  }, []);
+
   return (
     <Modal
       visible={visible}
@@ -48,6 +85,22 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
             <Feather name="download" size={16} color="black" />
           </View>
 
+
+          {/* Trạng thái */}
+          <Text style={styles.subText}>Trạng thái</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={draftOrder.facilityType?.id || ""}
+              onValueChange={(value) =>
+                updateDraftPath("facilityType", { id: value })
+              }
+            >
+              <Picker.Item label="Chọn trạng thái" value="" />
+              {orderType.map((ot) => (
+                <Picker.Item key={ot.id} label={ot.name} value={ot.id} />
+              ))}
+            </Picker>
+          </View>
           {/* Text Input */}
           <Text style={styles.label}>Thông Tin Yêu Cầu:</Text>
           <TextInput
@@ -67,7 +120,7 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
               <Text style={styles.outlinedText}>Quay Lại</Text>
             </Pressable>
             <Pressable style={styles.filledButton}>
-              <Text style={styles.filledText}>Nhận Đơn</Text>
+              <Text style={styles.filledText}>Trả Đơn</Text>
             </Pressable>
           </View>
         </View>
@@ -177,5 +230,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
     fontWeight: '600',
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#dd6b4d",
+    borderRadius: 8,
+    marginVertical: 8,
+    backgroundColor: "#fff",
+    overflow: "hidden",
   },
 });

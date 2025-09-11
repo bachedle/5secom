@@ -26,12 +26,7 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
 const handleAcceptOrder = async () => {
   if (!orderItem || !user) return;
 
-  // Log before assignment
-  console.log("BEFORE ASSIGNMENT:");
-  console.log("Order ID:", orderItem.id);
-  console.log("Current issuePlace:", orderItem.issuePlace);
-  console.log("User credname:", user.credname);
-  console.log("Full user object:", user); 
+
 
 
 

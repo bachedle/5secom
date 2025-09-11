@@ -89,7 +89,7 @@ const ManufacturingListPage = () => {
           style={styles.ACTIVE_TAB}
           onPress={handleNavigateTo2ndPage}
         >
-          <Text style={styles.ACTIVE_TAB_TEXT}>Đã nhận</Text>
+          <Text style={styles.ACTIVE_TAB_TEXT}>Đang chờ</Text>
           <View style={styles.TAB_BADGE}>
             <Text style={styles.BADGE_TEXT}>{filteredOrders.length}</Text>
           </View>
@@ -171,7 +171,7 @@ const ManufacturingListPage = () => {
       {/* Order List */}
       <FlatList
         data={filteredOrders}
-        renderItem={({ item }) => <OrderListItem orderItem={item} modalType="receive" />}
+        renderItem={({ item }) => <OrderListItem orderItem={item} modalType="accepted" />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         contentContainerStyle={styles.CARDS_WRAPPER}
       />
