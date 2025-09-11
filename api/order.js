@@ -71,7 +71,7 @@ export const createOrder = async (order) => {
 // UPDATE order
 export const updateOrder = async (id, order) => {
   const token = await SecureStore.getItemAsync('authToken');
-  const res = await axios.patch(`${API_URL}/facility/${id}`, order, {
+  const res = await axios.patch(`${API_URL}/facility`, order, {  // Remove /${id}
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -81,8 +81,3 @@ export const updateOrder = async (id, order) => {
   return res.data;
 };
 
-// // DELETE order
-// export const deleteOrder = async (id) => {
-//   const res = await axios.delete(`${API_URL}/facility`);
-//   return res.data;
-// };
