@@ -314,8 +314,10 @@ const UserEdit = () => {
               editable={!isLoading}
             />
           </ScrollView>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
 
-          {/* Footer buttons */}
+       {/* Footer buttons */}
           <View style={styles.footer}>
             <TouchableOpacity
               style={[styles.cancelButton, isLoading && styles.disabledButton]}
@@ -337,8 +339,6 @@ const UserEdit = () => {
               </Text>
             </TouchableOpacity>
           </View>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
@@ -415,7 +415,6 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    position: 'absolute',
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',

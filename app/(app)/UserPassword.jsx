@@ -18,6 +18,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../utils/authContext';
 
 const FOOTER_HEIGHT = 80;
+const HEADER_HEIGHT = 100;
+
 
 const UserPassword = () => {
   const router = useRouter();
@@ -108,11 +110,11 @@ const UserPassword = () => {
       {/* FORM AREA */}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={
-            Platform.OS === 'ios' ? FOOTER_HEIGHT : 0
-          }
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={
+
+            Platform.OS === 'ios' ? HEADER_HEIGHT + FOOTER_HEIGHT : 0}
         >
           <ScrollView
             contentContainerStyle={styles.contentWrapper}
@@ -216,9 +218,11 @@ const UserPassword = () => {
                 Mật khẩu xác nhận không khớp
               </Text>
             )}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
 
-            {/* Password Requirements */}
-            <View style={styles.requirementsContainer}>
+       <View style={styles.requirementsContainer}>
               <Text style={styles.requirementsTitle}>Yêu cầu mật khẩu:</Text>
               <Text style={[
                 styles.requirement,
@@ -233,9 +237,6 @@ const UserPassword = () => {
                 • Khác mật khẩu hiện tại
               </Text>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
 
       {/* FIXED FOOTER */}
       <View style={styles.footer}>
@@ -375,13 +376,10 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    position: 'absolute',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
     backgroundColor: '#fff',
-    bottom: 50,
-    width:'100%'
+    bottom: 50, // ✅ stick to bottom instead of 50px up
   },
 });

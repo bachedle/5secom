@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import { useOrder } from '../../utils/orderContext';
 
 
@@ -180,7 +181,7 @@ contentWrapper: {
 footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    position: 'absolute',
+    
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
