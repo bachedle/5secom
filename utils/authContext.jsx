@@ -17,6 +17,7 @@ export const AuthContext = createContext({
   fetchUser: async () => {},
   updateUser: async () => {},
   updateImage: async () => {},
+  updatePassword: async () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -206,22 +207,33 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const updateUser = async (updates) => {
+   const updateUser = async (updates) => {
     try {
       if (!token || !user) 
         throw new Error("Chưa xác thực");
 
-      // Clean and prepare the body according to your API schema
-      const body = {};
+      // Prepare the body according to the API schema
+      const body = {
+        version: user.version || 0,
+        id: user.id,
+      };
       
+      // Only include fields that are being updated
       if (updates.username) body.username = updates.username;
-      if (updates.credname) body.credname = updates.credname;
+      if (updates.name || updates.credname) body.name = updates.name || updates.credname;
       if (updates.phone) body.phone = updates.phone;
       if (updates.email) body.email = updates.email;
-      if (updates.birthdate) body.birthdate = updates.birthdate;
-      if (updates.password) body.password = updates.password;
+      if (updates.dob || updates.birthdate) body.dob = updates.dob || updates.birthdate;
+      if (updates.address) body.address = updates.address;
+      if (updates.idCardNumber) body.idCardNumber = updates.idCardNumber;
+      if (updates.idCardDate) body.idCardDate = updates.idCardDate;
+      if (updates.code) body.code = updates.code;
+      
+      // Include role and orgUnit if they exist
+      if (user.role) body.role = { id: user.role.id };
+      if (user.orgUnit) body.orgUnit = { id: user.orgUnit.id };
 
-      console.log('🔄 Updating user with:', body);
+      console.log('Updating user with:', body);
 
       const response = await axios.patch(`${API}/user`, body, { 
         headers: { 
@@ -230,7 +242,7 @@ export function AuthProvider({ children }) {
         }
       });
       
-      console.log('✅ Update successful:', response.data);
+      console.log('Update successful:', response.data);
       
       // Update user state with new data
       setUser(response.data);
@@ -245,13 +257,41 @@ export function AuthProvider({ children }) {
       return { success: true, data: response.data };
 
     } catch (error) {
-      console.error("❌ Update user failed:", error.response?.data || error.message);
+      console.error("Update user failed:", error.response?.data || error.message);
       return { 
         success: false, 
         error: error.response?.data?.message || error.response?.data || error.message 
       };
     }
   };
+  const updatePassword = async (currentPassword, newPassword) => {
+    try {
+      if (!token || !user) 
+        throw new Error("Chưa xác thực");
+      if (!currentPassword || !newPassword)
+        throw new Error("Cần cung cấp mật khẩu hiện tại và mật khẩu mới");
+      const body = {
+        oldPassword: currentPassword,
+        newPassword
+      };
+      console.log('🔄 Updating password');
+      const response = await axios.put(`${API}/user/change-password`, body, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('✅ Password update response:', response.data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error("❌ Update password failed:", error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.response?.data || error.message
+      };
+    } 
+  };
+
 
   const updateImage = async (imageUri) => {
     try {
@@ -308,6 +348,7 @@ export function AuthProvider({ children }) {
     logOut,
     fetchUser,
     updateUser,
+    updatePassword,
     updateImage,
   };
 

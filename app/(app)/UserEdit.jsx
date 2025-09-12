@@ -20,6 +20,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../../utils/authContext';
 
+
+const HEADER_HEIGHT = 100;
+const FOOTER_HEIGHT = 80;
+
 const UserEdit = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -32,23 +36,26 @@ const UserEdit = () => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [birthdate, setBirthdate] = useState('');
-  const [password, setPassword] = useState('');
+  const [address, setAddress] = useState('');
+  const [idCardNumber, setIdCardNumber] = useState('');
+  const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [imageChanged, setImageChanged] = useState(false);
 
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Only initialize once when component mounts or when user data first becomes available
+    // Initialize form with user data
     if (!isInitialized && (user || Object.keys(params).length > 0)) {
       setUsername(params.username || user?.username || '');
       setImage(params.image || user?.image || null);
-      setCredname(params.credname || user?.credname || '');
+      setCredname(params.credname || user?.name || user?.credname || '');
       setPhone(params.phone || user?.phone || '');
       setEmail(params.email || user?.email || '');
-      setBirthdate(params.birthdate || user?.birthdate || '');
-      // Don't pre-fill password for security
-      setPassword('');
+      setBirthdate(params.birthdate || user?.dob || user?.birthdate || '');
+      setAddress(params.address || user?.address || '');
+      setIdCardNumber(params.idCardNumber || user?.idCardNumber || '');
+      setCode(params.code || user?.code || '');
       setIsInitialized(true);
     }
   }, [params, user, isInitialized]);
@@ -67,8 +74,9 @@ const UserEdit = () => {
       if (username !== user?.username && username.trim()) {
         updates.username = username.trim();
       }
-      if (credname !== user?.credname && credname.trim()) {
-        updates.credname = credname.trim();
+      if (credname !== user?.name && credname.trim()) {
+        updates.name = credname.trim();
+        updates.credname = credname.trim(); // Support both field names
       }
       if (phone !== user?.phone && phone.trim()) {
         updates.phone = phone.trim();
@@ -76,20 +84,29 @@ const UserEdit = () => {
       if (email !== user?.email && email.trim()) {
         updates.email = email.trim();
       }
-      if (birthdate !== user?.birthdate && birthdate) {
-        updates.birthdate = birthdate;
+      if (birthdate !== user?.dob && birthdate) {
+        updates.dob = birthdate;
+        updates.birthdate = birthdate; // Support both field names
       }
-      if (password && password.trim()) {
-        updates.password = password.trim();
+      if (address !== user?.address && address.trim()) {
+        updates.address = address.trim();
+      }
+      if (idCardNumber !== user?.idCardNumber && idCardNumber.trim()) {
+        updates.idCardNumber = idCardNumber.trim();
+      }
+      if (code !== user?.code && code.trim()) {
+        updates.code = code.trim();
       }
 
       // Handle image update separately if changed
+      let imageUpdated = false;
       if (imageChanged && image) {
         const imageResult = await updateImage(image);
         if (!imageResult.success) {
           Alert.alert('Lỗi', `Không thể cập nhật ảnh: ${imageResult.error}`);
           return;
         }
+        imageUpdated = true;
       }
 
       // Update other user data if there are changes
@@ -104,7 +121,6 @@ const UserEdit = () => {
               {
                 text: 'OK',
                 onPress: () => {
-                  // Navigate back to UserPage with updated data
                   router.replace('/UserPage');
                 }
               }
@@ -113,7 +129,7 @@ const UserEdit = () => {
         } else {
           Alert.alert('Lỗi', `Không thể cập nhật: ${result.error}`);
         }
-      } else if (!imageChanged) {
+      } else if (!imageUpdated) {
         // No changes made
         Alert.alert('Thông báo', 'Không có thay đổi nào để lưu.');
       } else {
@@ -158,7 +174,7 @@ const UserEdit = () => {
 
   // Validation function
   const isFormValid = () => {
-    // Basic validation - adjust as needed
+    // Basic validation
     if (email && !email.includes('@')) return false;
     if (phone && phone.length < 10) return false;
     return true;
@@ -169,14 +185,17 @@ const UserEdit = () => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={
+
+            Platform.OS === 'ios' ? HEADER_HEIGHT + FOOTER_HEIGHT : 0}
         >
           <ScrollView
             contentContainerStyle={styles.contentWrapper}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.title}>Thông tin cá nhân</Text>
+            <Text style={styles.title}>Chỉnh sửa thông tin</Text>
 
             {/* Avatar */}
             <Text style={styles.subText}>Ảnh đại diện</Text>
@@ -200,7 +219,7 @@ const UserEdit = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Inputs */}
+            {/* Form Inputs */}
             <Text style={styles.subText}>Username</Text>
             <TextInput
               placeholder="Username"
@@ -210,13 +229,12 @@ const UserEdit = () => {
               editable={!isLoading}
             />
 
-            <Text style={styles.subText}>Password</Text>
+            <Text style={styles.subText}>Mã nhân viên</Text>
             <TextInput
-              placeholder="Nhập password mới (để trống nếu không thay đổi)"
-              secureTextEntry
+              placeholder="Mã nhân viên"
               style={styles.input}
-              value={password}
-              onChangeText={setPassword}
+              value={code}
+              onChangeText={setCode}
               editable={!isLoading}
             />
 
@@ -274,6 +292,27 @@ const UserEdit = () => {
               keyboardType="phone-pad"
               editable={!isLoading}
             />
+
+            <Text style={styles.subText}>Địa chỉ</Text>
+            <TextInput
+              placeholder="Địa chỉ"
+              style={[styles.input, styles.textArea]}
+              value={address}
+              onChangeText={setAddress}
+              multiline
+              numberOfLines={3}
+              editable={!isLoading}
+            />
+
+            <Text style={styles.subText}>CMND/CCCD</Text>
+            <TextInput
+              placeholder="Số CMND/CCCD"
+              style={styles.input}
+              value={idCardNumber}
+              onChangeText={setIdCardNumber}
+              keyboardType="numeric"
+              editable={!isLoading}
+            />
           </ScrollView>
 
           {/* Footer buttons */}
@@ -308,7 +347,11 @@ export default UserEdit;
 
 const styles = StyleSheet.create({
   contentWrapper: {
-    paddingBottom: 120, // extra space for footer
+    backgroundColor: 'white',
+    margin:10,
+    borderRadius: 8,
+    paddingTop: 20,
+    paddingBottom: 120,
     paddingVertical: 20,
     paddingHorizontal: 20,
   },
@@ -330,6 +373,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginVertical: 8,
     fontSize: 13,
+  },
+  textArea: {
+    paddingVertical: 15,
+    textAlignVertical: 'top',
   },
   inputError: {
     borderColor: 'red',
@@ -368,11 +415,12 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    position: 'absolute',
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
     backgroundColor: '#fff',
-    bottom: 50,
+    bottom: 50, // ✅ stick to bottom instead of 50px up
   },
   avatarWrapper: {
     alignItems: 'center',

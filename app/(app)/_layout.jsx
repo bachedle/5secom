@@ -21,7 +21,23 @@ export default function AppLayout() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ title: 'home' }} />
-      <Stack.Screen name="UserEdit" />
+      <Stack.Screen 
+        name="UserEdit" 
+        options={{
+          title: 'Chỉnh Sửa Thông Tin',
+          headerShown: true,
+          headerBackVisible: false,
+        }}  
+      />
+      <Stack.Screen 
+        name="UserPassword" 
+        options={{
+          title: 'Đổi Mật Khẩu',
+          headerShown: true,
+          headerBackVisible: false,
+        }}
+      
+      />
       <Stack.Screen
         name="category"
         options={{

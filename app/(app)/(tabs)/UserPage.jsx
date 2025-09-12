@@ -11,6 +11,11 @@ const UserPage = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Check if user is admin
+  const isAdmin = () => {
+    return user?.role?.name?.toLowerCase() === 'quản trị hệ thống'
+  };
+
   // Fetch user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
@@ -29,27 +34,32 @@ const UserPage = () => {
     };
 
     loadUserData();
-  }, []); // Empty dependency array - only run on mount
+  }, []);
 
   const handleLogout = () => {
     logOut();
     router.replace('/SignIn');
   };
 
-  const handleEdit = () => {
+  const handleEditProfile = () => {
     router.navigate({
       pathname: 'UserEdit',
       params: {
         username: user?.username || '',
         image: user?.image || user?.avatar || '',
-        credname: user?.name || user?.full_name || '',
+        credname: user?.name || user?.full_name || user?.credname || '',
         phone: user?.phone || '',
         email: user?.email || '',
         birthdate: user?.dob || user?.birthdate || '',
         address: user?.address || '',
         idCardNumber: user?.idCardNumber || '',
+        code: user?.code || '',
       },
     });
+  };
+
+  const handleChangePassword = () => {
+    router.navigate('UserPassword');
   };
 
   // Show loading state
@@ -121,12 +131,16 @@ const UserPage = () => {
             {user.username || user.email || 'User'}
           </Text>
           <Text style={styles.role}>
-            Role: {user.role.name || user.user_type || 'Member'}
+            Role: {user.role?.name || user.user_type || 'Member'}
           </Text>
 
           {/* Personal Info */}
           <View style={styles.infoBlock}>
             <Text style={styles.infoTitle}>Thông tin người dùng</Text>
+            <InfoRow 
+              label="Mã nhân viên" 
+              value={user.code} 
+            />
             <InfoRow 
               label="Họ và Tên" 
               value={user.name || user.full_name || user.credname} 
@@ -151,14 +165,42 @@ const UserPage = () => {
               label="CMND/CCCD" 
               value={user.idCardNumber} 
             />
-
           </View>
 
-          {/* Settings */}
-          <TouchableOpacity style={styles.settingsRow} onPress={handleEdit}>
-            <Text style={styles.settingsText}>Cài Đặt</Text>
-            <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
+          {/* Settings - Role-based buttons */}
+          <View style={styles.settingsSection}>
+            <Text style={styles.settingsTitle}>Cài Đặt</Text>
+            
+            {/* Show profile edit button only for admins */}
+            {isAdmin() && (
+              <TouchableOpacity style={styles.settingsRow} onPress={handleEditProfile}>
+                <View style={styles.settingsRowContent}>
+                  <MaterialCommunityIcons 
+                    name="account-edit" 
+                    size={20} 
+                    color="#dd6b4d" 
+                    style={styles.settingsIcon}
+                  />
+                  <Text style={styles.settingsText}>Chỉnh sửa thông tin</Text>
+                </View>
+                <Text style={styles.arrow}>›</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Password change button - available for all users */}
+            <TouchableOpacity style={styles.settingsRow} onPress={handleChangePassword}>
+              <View style={styles.settingsRowContent}>
+                <MaterialCommunityIcons 
+                  name="lock-outline" 
+                  size={20} 
+                  color="#dd6b4d" 
+                  style={styles.settingsIcon}
+                />
+                <Text style={styles.settingsText}>Đổi mật khẩu</Text>
+              </View>
+              <Text style={styles.arrow}>›</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Logout */}
           <TouchableOpacity style={styles.signInButton} onPress={handleLogout}>
@@ -268,15 +310,29 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#222',
   },
+  settingsSection: {
+    marginBottom: 30,
+  },
+  settingsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
   settingsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: '#eee',
     paddingVertical: 15,
-    marginBottom: 30,
+  },
+  settingsRowContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingsIcon: {
+    marginRight: 12,
   },
   settingsText: {
     fontSize: 16,
