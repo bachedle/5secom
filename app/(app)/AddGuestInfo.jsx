@@ -15,8 +15,9 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useOrder } from '../../utils/orderContext';
 
-const API_URL = "https://5secom.dientoan.vn/api";
 
+const HEADER_HEIGHT = 100;
+const FOOTER_HEIGHT = 80;
 
 const AddGuestInfo = () => {
   const router = useRouter();
@@ -46,8 +47,8 @@ const AddGuestInfo = () => {
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={
-            Platform.OS === 'ios' ? HEADER_HEIGHT + FOOTER_HEIGHT : 0
-          }
+
+            Platform.OS === 'ios' ? HEADER_HEIGHT + FOOTER_HEIGHT : 0}
         >
           <ScrollView
             contentContainerStyle={styles.contentWrapper}
@@ -180,7 +181,7 @@ contentWrapper: {
 footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-
+    
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
