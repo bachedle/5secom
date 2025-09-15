@@ -14,15 +14,17 @@ import {
 import { useState, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-
+import AccessDenied from '../../../components/AccessDenied';
 import OrderListItem from '../../../components/OrderListItem';
 import ModalFilter from '../../../components/modalFilter';
-
+import { AuthContext } from '../../../utils/authContext';
 import { OrderContext } from '../../../utils/orderContext';
 import * as SecureStore from 'expo-secure-store';
 
 const ProductListPage = () => {
   const router = useRouter();
+
+  const {logOut, user, token, fetchUser} = useContext(AuthContext);
 
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -40,6 +42,10 @@ const ProductListPage = () => {
 
   const handleStatusFilterChange = (status) => setSelectedStatus(status);
   const handleDateFilterChange = (date) => setSelectedDate(date);
+
+  const isAdmin = () => {
+    return user?.role?.name?.toLowerCase() === 'quản trị hệ thống'
+  };
 
   const filteredOrders = orders.filter(order => {
     const isUnassigned = order.issuePlace === 'unassigned' || order.issuePlace === null;
@@ -88,6 +94,12 @@ const ProductListPage = () => {
     );
   };
 
+    // 🔒 restrict page
+  if (!isAdmin()) {
+    return (
+      <AccessDenied />
+    );
+  }
   return (
     <View style={styles.CONTAINER}>
       {/* Header */}

@@ -11,7 +11,7 @@ export const getOrders = async (token) => {
   try {
     let allOrders = [];
     let page = 0;
-    const size = 20; // backend max size
+    const size = 100; // backend max size
     let total = 0;
 
     while (true) {
@@ -79,5 +79,26 @@ export const updateOrder = async (id, order) => {
     },
   });
   return res.data;
+};
+
+
+export const getFacilities = async (token) => {
+  try {
+    const res = await axios.post(
+      `${API_URL}/dashboard/facility-statistic/ltAKs4jLw8N7q7SHeUR2Kw==`,
+      {}, // body (empty if API doesn’t need data)
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("❌ Error fetching facilities:", error.response?.data || error.message);
+    throw error;
+  }
 };
 

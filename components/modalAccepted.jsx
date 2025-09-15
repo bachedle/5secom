@@ -3,11 +3,13 @@ import {
   StyleSheet,
   View,
   Text,
-  
+  Image,
+  TouchableOpacity,
   Pressable,
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Picker } from "@react-native-picker/picker";
@@ -20,11 +22,58 @@ import { useEffect, useState } from 'react';
 const API_URL = "https://5secom.dientoan.vn/api";
 
 const ModalAccepted = ({ visible, onClose, orderItem }) => {
-    const { draftOrder, updateDraftPath, submitDraft } = useOrder();
+    const { draftOrder, updateDraftPath, clearDraft, editOrder } = useOrder();
     const [orderType, setOrderType] = useState([]);
-    
-  
+    const [showFullImage, setShowFullImage] = useState(false);
+    const [isReturning, setIsReturning] = useState(false);
+    const { user } = useAuth();
 
+    const handleReturnOrder = async () => {
+      if (!orderItem || !user) return;
+
+      // Validate that facility type is selected
+      if (!draftOrder.facilityType?.id) {
+        Alert.alert("Lỗi", "Vui lòng chọn trạng thái trước khi trả đơn");
+        return;
+      }
+
+      // Validate that current user is the one assigned to this order
+      if (orderItem.issuePlace !== user.name) {
+        Alert.alert("Lỗi", "Bạn không có quyền trả đơn này");
+        return;
+      }
+    
+      setIsReturning(true);
+      try {
+        const updates = {
+          id: orderItem.id,
+          version: orderItem.version,
+          issuePlace: "unassigned", // Return to unassigned state
+          facilityType: { id: draftOrder.facilityType.id } // Update facility type
+        };
+    
+        // Log the update payload
+        console.log("RETURN ORDER PAYLOAD:", updates);
+        await editOrder(orderItem.id, updates);
+        
+        // Log success
+        console.log("ORDER RETURN SUCCESSFUL for Order ID:", orderItem.id);
+        
+        // Clear the draft after successful return
+        if (clearDraft) {
+          clearDraft();
+        }
+        
+        Alert.alert("Thành công!", "Trả đơn thành công!");
+        onClose();
+      } catch (error) {
+        console.log("ORDER RETURN FAILED:");
+        console.log("Error:", error);
+        Alert.alert("Lỗi", "Không thể trả đơn. Vui lòng thử lại.");
+      } finally {
+        setIsReturning(false);
+      }
+    };
 
     useEffect(() => {
       const fetchOptions = async () => {
@@ -36,96 +85,160 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
             Accept: "application/json",
           };
 
-      const orderTypeRes = await axios.get(
-          `${API_URL}/option/find?optionGroupCode=facility-type`,
-          { headers }
-        );
-        setOrderType(orderTypeRes.data.content);
-      } catch (error) {
-        console.error("Error fetching order types:", error);
+          const orderTypeRes = await axios.get(
+            `${API_URL}/option/find?optionGroupCode=facility-type`,
+            { headers }
+          );
+          setOrderType(orderTypeRes.data.content);
+        } catch (error) {
+          console.error("Error fetching order types:", error);
+        }
+      };
+      fetchOptions();
+    }, []);
+
+    // Reset draft when modal closes
+    useEffect(() => {
+      if (!visible && clearDraft) {
+        clearDraft();
       }
-    };
-    fetchOptions();
-  }, []);
+    }, [visible]);
+
+    // Check if return button should be enabled
+    const isReturnButtonEnabled = draftOrder.facilityType?.id && !isReturning;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        onRequestClose={onClose}
       >
-        <View style={styles.modalBox}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Trả đơn</Text>
-            <Pressable onPress={onClose} hitSlop={8}>
-              <Text style={styles.closeText}>✕</Text>
-            </Pressable>
-          </View>
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalBox}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>Trả đơn</Text>
+              <Pressable onPress={onClose} hitSlop={8}>
+                <Text style={styles.closeText}>✕</Text>
+              </Pressable>
+            </View>
 
-          {/* Product Name */}
-          <Text style={styles.label}>
-            Sản Phẩm: <Text style={styles.bold}>{orderItem?.labelingStandard || "--"}</Text>
-          </Text>
-
-          {/* Image Placeholder */}
-          <Text style={styles.label}>Hình Ảnh:</Text>
-          <View style={styles.imagePlaceholder} />
-
-          {/* File Link with Icon */}
-          <View style={styles.linkRow}>
-            <Text style={styles.linkText}>
-              https://sdfdsf.fsfsd..ffs/sfsdfds
+            {/* Product Name */}
+            <Text style={styles.label}>
+              Sản Phẩm: <Text style={styles.bold}>{orderItem?.labelingStandard || "--"}</Text>
             </Text>
-            <Feather name="download" size={16} color="black" />
-          </View>
 
+            {/* Current Facility Info */}
+            <Text style={styles.label}>
+              Hiện tại: <Text style={styles.bold}>{orderItem?.facilityType?.name || "---"}</Text>
+            </Text>
 
-          {/* Trạng thái */}
-          <Text style={styles.subText}>Trạng thái</Text>
-          <View style={styles.pickerWrapper}>
-            <Picker
-              selectedValue={draftOrder.facilityType?.id || ""}
-              onValueChange={(value) =>
-                updateDraftPath("facilityType", { id: value })
-              }
-            >
-              <Picker.Item label="Chọn trạng thái" value="" />
-              {orderType.map((ot) => (
-                <Picker.Item key={ot.id} label={ot.name} value={ot.id} />
-              ))}
-            </Picker>
+            {/* Image Placeholder */}
+            <Text style={styles.label}>Hình Ảnh:</Text>
+            <View style={styles.imagePlaceholder}>
+              {orderItem?.sampleSource ? (
+                <TouchableOpacity onPress={() => setShowFullImage(true)}>
+                  <Image
+                    source={{ uri: orderItem.sampleSource }}
+                    style={{ width: "100%", height: "100%", borderRadius: 6 }}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              ) : (
+                <Text style={{ color: "#666", textAlign: "center", marginTop: 40 }}>
+                  Chưa có hình
+                </Text>
+              )}
+            </View>
+
+            {/* File Link with Icon */}
+            <View style={styles.linkRow}>
+              <Text style={styles.linkText}>
+                https://sdfdsf.fsfsd..ffs/sfsdfds
+              </Text>
+              <Feather name="download" size={16} color="black" />
+            </View>
+
+            {/* Facility Type Picker */}
+            <Text style={styles.subText}>Trạng thái tiếp theo <Text style={styles.required}>*</Text></Text>
+            <View style={[
+              styles.pickerWrapper,
+              !draftOrder.facilityType?.id && styles.pickerWrapperError
+            ]}>
+              <Picker
+                selectedValue={draftOrder.facilityType?.id || ""}
+                onValueChange={(value) =>
+                  updateDraftPath("facilityType", { id: value })
+                }
+              >
+                <Picker.Item label="Chọn trạng thái" value="" />
+                {orderType.map((ot) => (
+                  <Picker.Item key={ot.id} label={ot.name} value={ot.id} />
+                ))}
+              </Picker>
+            </View>
+            
+            {!draftOrder.facilityType?.id && (
+              <Text style={styles.errorText}>Vui lòng chọn trạng thái tiếp theo</Text>
+            )}
+
+            {/* Text Input */}
+            <Text style={styles.label}>Thông Tin Yêu Cầu:</Text>
+            <TextInput
+              style={styles.inputBox}
+              placeholder="Nhập yêu cầu..."
+              multiline
+              textAlignVertical="top"
+              returnKeyType="done"
+            />
+
+            {/* Action Buttons */}
+            <View style={styles.buttonRow}>
+              <Pressable
+                style={[styles.outlinedButton, styles.buttonSpacing]}
+                onPress={onClose}
+              >
+                <Text style={styles.outlinedText}>Quay Lại</Text>
+              </Pressable>
+              <Pressable 
+                style={[
+                  styles.filledButton,
+                  !isReturnButtonEnabled && styles.disabledButton
+                ]}
+                onPress={handleReturnOrder}
+                disabled={!isReturnButtonEnabled}
+              >
+                <Text style={[
+                  styles.filledText,
+                  !isReturnButtonEnabled && styles.disabledText
+                ]}>
+                  {isReturning ? "Đang trả đơn..." : "Trả Đơn"}
+                </Text>
+              </Pressable>
+            </View>
           </View>
-          {/* Text Input */}
-          <Text style={styles.label}>Thông Tin Yêu Cầu:</Text>
-          <TextInput
-            style={styles.inputBox}
-            placeholder="Nhập yêu cầu..."
-            multiline
-            textAlignVertical="top"
-            returnKeyType="done"
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Full Image Modal */}
+      <Modal visible={showFullImage} transparent animationType="fade">
+        <TouchableOpacity 
+          style={styles.fullImageOverlay} 
+          onPress={() => setShowFullImage(false)}
+        >
+          <Image
+            source={{ uri: orderItem?.sampleSource }}
+            style={styles.fullImage}
+            resizeMode="contain"
           />
-
-          {/* Action Buttons */}
-          <View style={styles.buttonRow}>
-            <Pressable
-              style={[styles.outlinedButton, styles.buttonSpacing]}
-              onPress={onClose}
-            >
-              <Text style={styles.outlinedText}>Quay Lại</Text>
-            </Pressable>
-            <Pressable style={styles.filledButton}>
-              <Text style={styles.filledText}>Trả Đơn</Text>
-            </Pressable>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 };
 
@@ -145,8 +258,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
-    elevation: 8,              // Android shadow
-    shadowColor: '#000',       // iOS shadow
+    elevation: 8,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -179,6 +292,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     borderRadius: 6,
     marginBottom: 10,
+    overflow: 'hidden',
   },
   linkRow: {
     flexDirection: 'row',
@@ -191,6 +305,15 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexWrap: 'wrap',
     marginRight: 8,
+  },
+  subText: {
+    fontSize: 14,
+    marginTop: 10,
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  required: {
+    color: '#f44336',
   },
   inputBox: {
     borderWidth: 1.5,
@@ -231,6 +354,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  disabledText: {
+    color: '#666',
+  },
   pickerWrapper: {
     borderWidth: 1,
     borderColor: "#dd6b4d",
@@ -238,5 +367,24 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     backgroundColor: "#fff",
     overflow: "hidden",
+  },
+  pickerWrapperError: {
+    borderColor: '#f44336',
+  },
+  errorText: {
+    color: '#f44336',
+    fontSize: 12,
+    marginTop: -4,
+    marginBottom: 8,
+  },
+  fullImageOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '100%',
+    height: '100%',
   },
 });
