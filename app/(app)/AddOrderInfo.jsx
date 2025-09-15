@@ -209,6 +209,16 @@ const AddOrderInfo = () => {
             contentContainerStyle={styles.contentWrapper}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            removeClippedSubviews={true}
+            scrollEventThrottle={16}
+            bounces={true}
+            alwaysBounceVertical={false}
+            delayContentTouches={false}
+            directionalLockEnabled={true}
+            automaticallyAdjustContentInsets={false}
+            contentInsetAdjustmentBehavior="never"
+            onScrollBeginDrag={Keyboard.dismiss}
+            
           >
             <Text style={styles.title}>Thông tin Đơn Hàng</Text>
 
@@ -295,6 +305,7 @@ const AddOrderInfo = () => {
                   source={{ uri: image }}
                   style={{ flex: 1, borderRadius: 8 }}
                   resizeMode="cover"
+                  pointerEvents="none"
                 />
               </View>
             )}

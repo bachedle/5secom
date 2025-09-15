@@ -1,6 +1,6 @@
 // context/OrderContext.js
 import { createContext, useState, useEffect, useContext, useMemo } from "react";
-import { getOrders, getOrderByID, createOrder, updateOrder } from "../api/order";
+import { getOrders, getFacilities, createOrder, updateOrder } from "../api/order";
 import { AuthContext } from "./authContext";
 import * as SecureStore from "expo-secure-store";
 
@@ -40,6 +40,7 @@ const initialDraft = {
   attr5: null,
 };
 
+ 
 const cleanOrder = (draft) => {
   const cleaned = { ...draft };
   ["facilityType", "stateOpt", "orgUnit", "skuOpt"].forEach((key) => {
@@ -66,6 +67,32 @@ export const OrderProvider = ({ children }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true); 
   const [loadingMore, setLoadingMore] = useState(false);
+
+  // Facilities state
+  const [facilities, setFacilities] = useState([]);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
+
+  const fetchFacilities = async () => {
+    if (!isLoggedIn || !token) return;
+    setLoadingFacilities(true);
+    try {
+      const data = await getFacilities(token);
+      setFacilities(data || []);
+    } catch (err) {
+      console.error("Error fetching facilities:", err);
+      setFacilities([]);
+    } finally {
+      setLoadingFacilities(false);
+    }
+  };
+
+
+    // Fetch facilities after login
+  useEffect(() => {
+    if (isLoggedIn && token) {
+      fetchFacilities();
+    }
+  }, [isLoggedIn, token]);
 
 
   // Load saved draft
@@ -174,7 +201,6 @@ const fetchOrders = async () => {
       setOrders((prev) =>
         prev.map((order) => (order.id === id ? updated : order))
       );
-      
       await fetchOrders();
 
       return updated;
@@ -212,8 +238,12 @@ const fetchOrders = async () => {
       hasMore,
       loadingMore,
 
+      facilities,
+      fetchFacilities,
+      loadingFacilities,
+
     }),
-    [orders, loading, draftOrder]
+    [orders, loading, draftOrder, facilities, loadingFacilities]
   );
 
   return (

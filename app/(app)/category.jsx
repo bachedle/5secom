@@ -16,6 +16,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import OrderListItem from '../../components/OrderListItem';
+import { useAuth } from "../../utils/authContext";
 
 import { OrderContext } from '../../utils/orderContext';
 
@@ -28,6 +29,10 @@ const ManufacturingListPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState(null);
+  const { user } = useAuth();
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+  
 
   const handleBack = () => {
     router.dismiss();
@@ -55,21 +60,26 @@ const ManufacturingListPage = () => {
     setModalVisible(false);
   };
 
-  const filteredOrders = orders.filter((order) => {
+    const acceptedOrder = orders.filter((order) => {
 
     const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
 
-    // const matchesLabel = order.label === label;
-    const matchesSearch =
-      searchText === '' ||
-      order.name?.toLowerCase().includes(searchText.toLowerCase());
+    const isUserMatch = order.issuePlace === user.name;
 
-    const matchesDate =
-      !deliveryDate ||
-      new Date(order.deliveryDate).toDateString() ===
-        new Date(deliveryDate).toDateString();
+    return isAssigned  && isUserMatch; // && matchesLabel  
+  });
 
-    return isAssigned && matchesSearch && matchesDate;
+   const filteredOrders = orders.filter(order => {
+    const isUnassigned = order.issuePlace === 'unassigned' || order.issuePlace === null;
+
+    const searchMatch =
+      (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
+    const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
+    const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
+    
+    return searchMatch && statusMatch && dateMatch && isUnassigned;
   });
 
   return (
@@ -89,9 +99,9 @@ const ManufacturingListPage = () => {
           style={styles.ACTIVE_TAB}
           onPress={handleNavigateTo2ndPage}
         >
-          <Text style={styles.ACTIVE_TAB_TEXT}>Đang chờ</Text>
+          <Text style={styles.ACTIVE_TAB_TEXT}>Đã nhận</Text>
           <View style={styles.TAB_BADGE}>
-            <Text style={styles.BADGE_TEXT}>{filteredOrders.length}</Text>
+            <Text style={styles.BADGE_TEXT}>{acceptedOrder.length}</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -171,7 +181,7 @@ const ManufacturingListPage = () => {
       {/* Order List */}
       <FlatList
         data={filteredOrders}
-        renderItem={({ item }) => <OrderListItem orderItem={item} modalType="accepted" />}
+        renderItem={({ item }) => <OrderListItem orderItem={item} />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         contentContainerStyle={styles.CARDS_WRAPPER}
       />
