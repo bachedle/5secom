@@ -18,18 +18,12 @@ import { useAuth } from "../utils/authContext";
 
 const ModalTest = ({ visible, onClose, orderItem }) => {
   const [showFullImage, setShowFullImage] = useState(false);
-
   const [isAccepting, setIsAccepting] = useState(false);
   const { editOrder } = useOrder();
   const { user } = useAuth(); 
 
 const handleAcceptOrder = async () => {
   if (!orderItem || !user) return;
-
-
-
-
-
 
   const isAlreadyAssigned = orderItem.issuePlace && orderItem.issuePlace !== 'unassigned';
   if (isAlreadyAssigned) {
@@ -45,16 +39,12 @@ const handleAcceptOrder = async () => {
       issuePlace: user.name
     };
 
-    // Log the update payload
-    console.log("PATCH PAYLOAD:", updates);
-
-    await editOrder(orderItem.id, updates);
-    
-    // Log success
-    console.log("ASSIGNMENT SUCCESSFUL for Order ID:", orderItem.id);
-    
+    await editOrder(orderItem.id, updates);    
     Alert.alert("Nhận đơn thành công!");
+    
+    // Close modal after successful update
     onClose();
+    
   } catch (error) {
     console.log("ASSIGNMENT FAILED:");
     console.log("Error:", error);

@@ -124,6 +124,7 @@ const fetchOrders = async () => {
 
     // setHasMore(false);  // disable infinite scroll
     setPage(0);
+    
   } catch (err) {
     console.error("Error fetching orders:", err);
     setOrders([]);
@@ -173,7 +174,11 @@ const fetchOrders = async () => {
       setOrders((prev) =>
         prev.map((order) => (order.id === id ? updated : order))
       );
+      
+      await fetchOrders();
+
       return updated;
+      
     } catch (error) {
       console.error("Error updating order:", error);
       throw error;
