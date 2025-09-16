@@ -22,90 +22,78 @@ import { useEffect, useState } from 'react';
 const API_URL = "https://5secom.dientoan.vn/api";
 
 const ModalAccepted = ({ visible, onClose, orderItem }) => {
-    const { draftOrder, updateDraftPath, clearDraft, editOrder } = useOrder();
-    const [orderType, setOrderType] = useState([]);
-    const [showFullImage, setShowFullImage] = useState(false);
-    const [isReturning, setIsReturning] = useState(false);
-    const { user } = useAuth();
+  const { draftOrder, updateDraftPath, clearDraft, editOrder } = useOrder();
+  const [orderType, setOrderType] = useState([]);
+  const [showFullImage, setShowFullImage] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
+  const { user } = useAuth();
 
-    const handleReturnOrder = async () => {
-      if (!orderItem || !user) return;
+  const handleReturnOrder = async () => {
+    if (!orderItem || !user) return;
 
-      // Validate that facility type is selected
-      if (!draftOrder.facilityType?.id) {
-        Alert.alert("Lỗi", "Vui lòng chọn trạng thái trước khi trả đơn");
-        return;
-      }
+    if (!draftOrder.facilityType?.id) {
+      Alert.alert("Lỗi", "Vui lòng chọn trạng thái trước khi trả đơn");
+      return;
+    }
 
-      // Validate that current user is the one assigned to this order
-      if (orderItem.issuePlace !== user.name) {
-        Alert.alert("Lỗi", "Bạn không có quyền trả đơn này");
-        return;
-      }
-    
-      setIsReturning(true);
+    if (orderItem.issuePlace !== user.name) {
+      Alert.alert("Lỗi", "Bạn không có quyền trả đơn này");
+      return;
+    }
+
+    setIsReturning(true);
+    try {
+      const updates = {
+        id: orderItem.id,
+        version: orderItem.version,
+        issuePlace: "unassigned",
+        facilityType: { id: draftOrder.facilityType.id }
+      };
+
+      await editOrder(orderItem.id, updates);
+
+      if (clearDraft) clearDraft();
+      
+      Alert.alert("Thành công!", "Trả đơn thành công!");
+      
+      onClose();
+    } catch (error) {
+      console.log("ORDER RETURN FAILED:", error);
+      Alert.alert("Lỗi", "Không thể trả đơn. Vui lòng thử lại.");
+    } finally {
+      setIsReturning(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchOptions = async () => {
       try {
-        const updates = {
-          id: orderItem.id,
-          version: orderItem.version,
-          issuePlace: "unassigned", // Return to unassigned state
-          facilityType: { id: draftOrder.facilityType.id } // Update facility type
+        const token = await SecureStore.getItemAsync("authToken");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
         };
-    
-        // Log the update payload
-        console.log("RETURN ORDER PAYLOAD:", updates);
-        await editOrder(orderItem.id, updates);
-        
-        // Log success
-        console.log("ORDER RETURN SUCCESSFUL for Order ID:", orderItem.id);
-        
-        // Clear the draft after successful return
-        if (clearDraft) {
-          clearDraft();
-        }
-        
-        Alert.alert("Thành công!", "Trả đơn thành công!");
-        onClose();
+
+        const orderTypeRes = await axios.get(
+          `${API_URL}/option/find?optionGroupCode=facility-type`,
+          { headers }
+        );
+        setOrderType(orderTypeRes.data.content);
       } catch (error) {
-        console.log("ORDER RETURN FAILED:");
-        console.log("Error:", error);
-        Alert.alert("Lỗi", "Không thể trả đơn. Vui lòng thử lại.");
-      } finally {
-        setIsReturning(false);
+        console.error("Error fetching order types:", error);
       }
     };
+    fetchOptions();
+  }, []);
 
-    useEffect(() => {
-      const fetchOptions = async () => {
-        try {
-          const token = await SecureStore.getItemAsync("authToken");
-          const headers = {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          };
+  useEffect(() => {
+    if (!visible && clearDraft) {
+      clearDraft();
+    }
+  }, [visible]);
 
-          const orderTypeRes = await axios.get(
-            `${API_URL}/option/find?optionGroupCode=facility-type`,
-            { headers }
-          );
-          setOrderType(orderTypeRes.data.content);
-        } catch (error) {
-          console.error("Error fetching order types:", error);
-        }
-      };
-      fetchOptions();
-    }, []);
-
-    // Reset draft when modal closes
-    useEffect(() => {
-      if (!visible && clearDraft) {
-        clearDraft();
-      }
-    }, [visible]);
-
-    // Check if return button should be enabled
-    const isReturnButtonEnabled = draftOrder.facilityType?.id && !isReturning;
+  const isReturnButtonEnabled = draftOrder.facilityType?.id && !isReturning;
 
   return (
     <>
@@ -119,7 +107,11 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
           style={styles.overlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.modalBox}>
+          {/* Tap outside to close */}
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+
+          {/* Modal content (tap inside won't close) */}
+          <Pressable style={styles.modalBox} onPress={(e) => e.stopPropagation()}>
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.title}>Trả đơn</Text>
@@ -182,7 +174,6 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
                 ))}
               </Picker>
             </View>
-            
             {!draftOrder.facilityType?.id && (
               <Text style={styles.errorText}>Vui lòng chọn trạng thái tiếp theo</Text>
             )}
@@ -221,7 +212,7 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
                 </Text>
               </Pressable>
             </View>
-          </View>
+          </Pressable>
         </KeyboardAvoidingView>
       </Modal>
 
