@@ -6,7 +6,7 @@ import { formatNumber } from '../../../utils/numberFormat';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const HomePage = () => {
-  const { totalOrders } = useContext(OrderContext);
+  const { totalOrders, orders } = useContext(OrderContext);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
@@ -16,29 +16,22 @@ const HomePage = () => {
     month: "short",
   }).toUpperCase();
 
-  const { orders } = useContext(OrderContext);
-function isSameDay(date1, date2) {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
-}
+  function isSameDay(date1, date2) {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  }
 
-const ordersForDate = orders.filter(order => {
-  if (!order.createdDate) return false;
-  const orderDate = new Date(order.createdDate); // parse ISO from backend
-  return isSameDay(orderDate, selectedDate);
-});
-
-
-
-
-
+  const ordersForDate = orders.filter(order => {
+    if (!order.createdDate) return false;
+    const orderDate = new Date(order.createdDate); 
+    return isSameDay(orderDate, selectedDate);
+  });
 
   return (
     <View style={styles.background}>
-
       {showPicker && (
         <DateTimePicker
           value={selectedDate}
@@ -51,7 +44,12 @@ const ordersForDate = orders.filter(order => {
         />
       )}
 
-        {/* Dashboard Heading */}
+      {/* Wrap entire content in ScrollView */}
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Orange Header */}
         <View style={styles.headerWrapper}>
           <View style={styles.headingRow}>
             <Text style={styles.headingText}>Dashboard</Text>
@@ -60,7 +58,7 @@ const ordersForDate = orders.filter(order => {
             </TouchableOpacity>
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+          <View style={styles.statsRow}>
             <View>
               <Text style={styles.subHeadingText}>Tổng đơn</Text>
               <Text style={styles.headingText}>{formatNumber(totalOrders)}</Text>
@@ -71,33 +69,17 @@ const ordersForDate = orders.filter(order => {
               <Text style={styles.headingText}>{formatNumber(ordersForDate.length)}</Text>
             </View>
           </View>
-
-          
-
-          {/* Fixed Tracking + Ngày Ship Row */}
-          {/* <View style={styles.infoRow}>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Tracking mới nhất</Text>
-              <Text style={styles.infoValue}>SKU001</Text>
-            </View>
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Ngày Ship gần nhất</Text>
-              <Text style={styles.infoValue}>20 JUL 2025</Text>
-            </View>
-          </View> */}
         </View>
 
-        {/* White Scrollable Section */}
+        {/* White content that overlaps orange */}
         <View style={styles.contentWrapper}>
-          <Text style={styles.placeholderText}>
-            <OrderStatusTab></OrderStatusTab>
-          </Text>
-          {/* Add dynamic content below here */} 
+          <OrderStatusTab />
+          {/* 🔥 Add more scrollable stuff here later */}
         </View>
+      </ScrollView>
     </View>
   );
 };
-// coment
 
 export default HomePage;
 
@@ -109,13 +91,14 @@ const styles = StyleSheet.create({
 
   headerWrapper: {
     paddingHorizontal: 20,
+    paddingTop: 70,
+    paddingBottom: 40, // more bottom padding for overlap
   },
 
   headingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 70,
   },
 
   headingText: {
@@ -139,41 +122,21 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 
-  infoRow: {
+  statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginTop: 10,
-  },
-
-  infoBox: {
-    flex: 1,
-  },
-
-  infoLabel: {
-    fontSize: 14,
-    color: '#fff',
-    marginBottom: 4,
-  },
-
-  infoValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    marginTop: 20,
   },
 
   contentWrapper: {
+    flex: 1,
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    marginTop: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    minHeight: "100%", // Set a high value to simulate infinite scroll
-  },
 
-  placeholderText: {
-    textAlign: 'center',
-    color: '#000',
+    // 🔥 overlap effect
+    marginTop: -30,  // pull up to overlap header
   },
 });

@@ -29,6 +29,8 @@ const AcceptedOrderPage = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const { user } = useAuth();
 
+  const { label, facilityCode } = useLocalSearchParams();
+
   const { orders, loading } = useContext(OrderContext);
   
 
@@ -44,6 +46,8 @@ const AcceptedOrderPage = () => {
     const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
 
     const isUserMatch = order.issuePlace === user.name;
+    
+    const facilityMatch = order.facilityType?.code === facilityCode;
 
     const searchMatch =
       searchText.trim() === '' ||
@@ -52,7 +56,7 @@ const AcceptedOrderPage = () => {
     const statusMatch = selectedStatus ? order.label === selectedStatus : true;
     const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
 
-    return isAssigned && searchMatch && statusMatch && dateMatch && isUserMatch;
+    return isAssigned && searchMatch && statusMatch && dateMatch && isUserMatch && facilityMatch;
   });
 
   return (
