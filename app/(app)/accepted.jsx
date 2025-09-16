@@ -92,6 +92,12 @@ const AcceptedOrderPage = () => {
         data={filteredOrders}
         renderItem={({ item }) => <OrderListItem orderItem={item} modalType="accepted" />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Không có đơn hàng</Text>
+          </View>
+        )}
       />
 
 
@@ -145,4 +151,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFECE8',
     borderRadius: 8,
   },
+    emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+    emptyText: {
+    fontSize: 16,
+    color: "#888",
+    fontWeight: "500",
+  },
+
 });
