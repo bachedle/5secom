@@ -188,6 +188,12 @@ const ManufacturingListPage = () => {
         renderItem={({ item }) => <OrderListItem orderItem={item} />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         contentContainerStyle={styles.CARDS_WRAPPER}
+
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Không có đơn hàng</Text>
+          </View>
+        )}
       />
     </View>
   );
@@ -338,5 +344,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
     fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+  },
+    emptyText: {
+    fontSize: 16,
+    color: "#888",
+    fontWeight: "500",
   },
 });
