@@ -31,7 +31,7 @@ const AddOrderInfo = () => {
 
   const [skuOptions, setSkuOptions] = useState([]);
   const [allSizes, setAllSizes] = useState([]);
-  const [filteredSizes, setFilteredSizes] = useState([]);
+  const [filteredSizes, setFilteredSizes] = useState([]); // <-- use this for the size picker
   const [orderType, setOrderType] = useState([]);
   const [labeling, setLabeling] = useState([]);
   const [image, setImage] = useState("");
@@ -85,26 +85,27 @@ const AddOrderInfo = () => {
           `${API_URL}/option/find?optionGroupCode=state-test`,
           { headers }
         );
-        setAllSizes(sizeRes.data.content);
-        setFilteredSizes(sizeRes.data.content);
+        setAllSizes(sizeRes.data.content || []);
+        // default filteredSizes to all until a sku is chosen
+        setFilteredSizes(sizeRes.data.content || []);
 
         const orderTypeRes = await axios.get(
           `${API_URL}/option/find?optionGroupCode=facility-type`,
           { headers }
         );
-        setOrderType(orderTypeRes.data.content);
+        setOrderType(orderTypeRes.data.content || []);
 
         const skuRes = await axios.get(
           `${API_URL}/option/find?optionGroupCode=skudesigns`,
           { headers }
         );
-        setSkuOptions(skuRes.data.content);
+        setSkuOptions(skuRes.data.content || []);
 
         const labelingStandardRes = await axios.get(
           `${API_URL}/option/find?optionGroupCode=type-of-goods`,
           { headers }
         );
-        setLabeling(labelingStandardRes.data.content);
+        setLabeling(labelingStandardRes.data.content || []);
       } catch (error) {
         console.error(
           "Error fetching options:",
@@ -115,16 +116,58 @@ const AddOrderInfo = () => {
     fetchOptions();
   }, []);
 
-  // const handleSkuChange = (val) => {
-  //   updateDraftPath("skuOpt", { id: val });
-  //   const relevantSizes = allSizes.filter((s) => s.skuOpt?.id === val);
-  //   setFilteredSizes(relevantSizes);
-  //   updateDraftPath("stateOpt", { id: "" }); // reset size if sku changed
-  // };
+  // When SKU or the options lists change, update filtered sizes automatically
+  useEffect(() => {
+    const skuId = draftOrder?.skuOpt?.id;
+    if (!skuId) {
+      // No SKU selected => show all sizes (or you might want to show none)
+      setFilteredSizes(allSizes);
+      return;
+    }
+
+    // find selected SKU object to get its parentOpt.id
+    const selectedSku = skuOptions.find((s) => s.id === skuId);
+    const parentId = selectedSku?.parentOpt?.id;
+
+    if (!parentId) {
+      setFilteredSizes([]); // nothing matches
+      return;
+    }
+
+    // filter sizes whose parentOpt.id matches
+    const relevantSizes = allSizes.filter(
+      (s) => s.parentOpt?.id && s.parentOpt.id === parentId
+    );
+
+    setFilteredSizes(relevantSizes);
+    // If current selected stateOpt does not belong to the new relevantSizes, clear it
+    const currentStateId = draftOrder?.stateOpt?.id;
+    if (currentStateId && !relevantSizes.some((r) => r.id === currentStateId)) {
+      updateDraftPath("stateOpt", null);
+    }
+  }, [allSizes, skuOptions, draftOrder?.skuOpt?.id]);
 
   const handleSkuChange = (val) => {
-  updateDraftPath("skuOpt", { id: val });
-};
+    // set chosen SKU id into draft
+    updateDraftPath("skuOpt", { id: val });
+
+    // reset size selection whenever sku changes
+    updateDraftPath("stateOpt", null);
+
+    // immediate local update of filteredSizes for snappier UI:
+    if (!val) {
+      setFilteredSizes(allSizes);
+      return;
+    }
+    const selectedSku = skuOptions.find((s) => s.id === val);
+    const parentId = selectedSku?.parentOpt?.id;
+    if (!parentId) {
+      setFilteredSizes([]);
+      return;
+    }
+    const relevantSizes = allSizes.filter((s) => s.parentOpt?.id === parentId);
+    setFilteredSizes(relevantSizes);
+  };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -134,7 +177,7 @@ const AddOrderInfo = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       allowsEditing: true,
       quality: 1,
     });
@@ -165,27 +208,10 @@ const AddOrderInfo = () => {
         return;
       }
 
-
       updateDraftPath("sampleSource", fileId ? fileUrl : "");
 
-      // // Priority: server base64 > convert URL to base64 > local URI
-      // if (serverBase64) {
-      //   setImage(serverBase64);
-      //   console.log("Using server base64");
-      // } else if (fileUrl && typeof fileUrl === "string") {
-      //   console.log("Converting uploaded image URL to base64...");
-      //   try {
-      //     const imageBase64 = await localUriToBase64(fileUrl, file.type);
-      //     setImage(imageBase64);
-      //     console.log("Successfully converted URL to base64");
-      //   } catch (base64Error) {
-      //     console.error("Failed to convert URL to base64:", base64Error);
-      //     setImage(asset.uri); // Fallback to local URI
-      //   }
-      // } else {
-        setImage(asset.uri);
-        console.log("Using local URI");
-      
+      setImage(asset.uri);
+      console.log("Using local URI");
     } catch (err) {
       console.error("Upload error:", err?.response?.data || err.message);
       Alert.alert("Lỗi", "Không thể tải ảnh.");
@@ -218,7 +244,6 @@ const AddOrderInfo = () => {
             automaticallyAdjustContentInsets={false}
             contentInsetAdjustmentBehavior="never"
             onScrollBeginDrag={Keyboard.dismiss}
-            
           >
             <Text style={styles.title}>Thông tin Đơn Hàng</Text>
 
@@ -246,7 +271,7 @@ const AddOrderInfo = () => {
                 }
               >
                 <Picker.Item label="Chọn kích thước" value="" />
-                {allSizes.map((s) => (
+                {filteredSizes.map((s) => (
                   <Picker.Item key={s.id} label={s.name} value={s.id} />
                 ))}
               </Picker>
@@ -288,10 +313,7 @@ const AddOrderInfo = () => {
 
             {/* Hình ảnh */}
             <Text style={styles.subText}>Hình ảnh</Text>
-            <TouchableOpacity
-              style={styles.uploadButton}
-              onPress={pickImage}
-            >
+            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               <Text style={{ color: "#555" }}>
                 {image ? "Ảnh đã chọn" : "Chọn hoặc tải ảnh lên"}
               </Text>

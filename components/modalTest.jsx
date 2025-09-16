@@ -1,4 +1,4 @@
-import React, { useState} from "react";
+import React, { useState } from "react";
 import {
   Modal,
   StyleSheet,
@@ -20,113 +20,140 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
   const [showFullImage, setShowFullImage] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const { editOrder } = useOrder();
-  const { user } = useAuth(); 
+  const { user } = useAuth();
 
-const handleAcceptOrder = async () => {
-  if (!orderItem || !user) return;
+  const handleAcceptOrder = async () => {
+    if (!orderItem || !user) return;
 
-  const isAlreadyAssigned = orderItem.issuePlace && orderItem.issuePlace !== 'unassigned';
-  if (isAlreadyAssigned) {
-    Alert.alert("Đơn hàng đã được nhận");
-    return;
-  }
+    const isAlreadyAssigned =
+      orderItem.issuePlace && orderItem.issuePlace !== "unassigned";
+    if (isAlreadyAssigned) {
+      Alert.alert("Đơn hàng đã được nhận");
+      return;
+    }
 
-  setIsAccepting(true);
-  try {
-    const updates = {
-      id: orderItem.id,
-      version: orderItem.version,
-      issuePlace: user.name
-    };
+    setIsAccepting(true);
+    try {
+      const updates = {
+        id: orderItem.id,
+        version: orderItem.version,
+        issuePlace: user.name,
+      };
 
-    await editOrder(orderItem.id, updates);    
-    Alert.alert("Nhận đơn thành công!");
-    
-    // Close modal after successful update
-    onClose();
-    
-  } catch (error) {
-    console.log("ASSIGNMENT FAILED:");
-    console.log("Error:", error);
-    Alert.alert("Lỗi", "Không thể nhận đơn");
-  } finally {
-    setIsAccepting(false);
-  }
-};
+      await editOrder(orderItem.id, updates);
+      Alert.alert("Nhận đơn thành công!");
+
+      // Close modal after successful update
+      onClose();
+    } catch (error) {
+      console.log("ASSIGNMENT FAILED:");
+      console.log("Error:", error);
+      Alert.alert("Lỗi", "Không thể nhận đơn");
+    } finally {
+      setIsAccepting(false);
+    }
+  };
 
   return (
     <>
       {/* Main Modal */}
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        onRequestClose={onClose}
+      >
         <KeyboardAvoidingView
           style={styles.overlay}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.modalBox}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Nhận đơn</Text>
-              <Pressable onPress={onClose} hitSlop={8}>
-                <Text style={styles.closeText}>✕</Text>
-              </Pressable>
-            </View>
+          {/* Outer touchable to close on outside press */}
+          <TouchableOpacity
+            style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}
+            activeOpacity={1}
+            onPress={onClose}
+          >
+            {/* Inner modal box - stop propagation so inside taps don't close */}
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalBox}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>Nhận đơn</Text>
+                <Pressable onPress={onClose} hitSlop={8}>
+                  <Text style={styles.closeText}>✕</Text>
+                </Pressable>
+              </View>
 
-            {/* Product Name */}
-            <Text style={styles.label}>
-              Sản Phẩm:{" "}
-              <Text style={styles.bold}>{orderItem?.labelingStandard || "--"}</Text>
-            </Text>
-
-            {/* Thumbnail */}
-            <Text style={styles.label}>Hình Ảnh:</Text>
-            <View style={styles.imagePlaceholder}>
-              {orderItem?.sampleSource ? (
-                <TouchableOpacity onPress={() => setShowFullImage(true)}>
-                  <Image
-                    source={{ uri: orderItem.sampleSource }}
-                    style={{ width: "100%", height: "100%", borderRadius: 6 }}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
-              ) : (
-                <Text style={{ color: "#666", textAlign: "center", marginTop: 40 }}>
-                  Chưa có hình
+              {/* Product Name */}
+              <Text style={styles.label}>
+                Sản Phẩm:{" "}
+                <Text style={styles.bold}>
+                  {orderItem?.labelingStandard || "--"}
                 </Text>
-              )}
-            </View>
+              </Text>
 
-            {/* Text Input */}
-            <Text style={styles.label}>Thông Tin Yêu Cầu:</Text>
-            <TextInput
-              style={styles.inputBox}
-              placeholder="Nhập yêu cầu..."
-              multiline
-              textAlignVertical="top"
-              returnKeyType="done"
-            />
+              {/* Thumbnail */}
+              <Text style={styles.label}>Hình Ảnh:</Text>
+              <View style={styles.imagePlaceholder}>
+                {orderItem?.sampleSource ? (
+                  <TouchableOpacity onPress={() => setShowFullImage(true)}>
+                    <Image
+                      source={{ uri: orderItem.sampleSource }}
+                      style={{ width: "100%", height: "100%", borderRadius: 6 }}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                ) : (
+                  <Text
+                    style={{ color: "#666", textAlign: "center", marginTop: 40 }}
+                  >
+                    Chưa có hình
+                  </Text>
+                )}
+              </View>
 
-            {/* Action Buttons */}
-            <View style={styles.buttonRow}>
-              <Pressable style={[styles.outlinedButton, styles.buttonSpacing]} onPress={onClose}>
-                <Text style={styles.outlinedText}>Quay Lại</Text>
-              </Pressable>
-              <Pressable 
-                style={styles.filledButton}
-                onPress={handleAcceptOrder}
-                disabled={isAccepting}
-              >
-                <Text style={styles.filledText}>
-                  {isAccepting ? "Đang xử lý..." : "Nhận Đơn"}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+              {/* Text Input */}
+              <Text style={styles.label}>Thông Tin Yêu Cầu:</Text>
+              <TextInput
+                style={styles.inputBox}
+                placeholder="Nhập yêu cầu..."
+                multiline
+                textAlignVertical="top"
+                returnKeyType="done"
+              />
+
+              {/* Action Buttons */}
+              <View style={styles.buttonRow}>
+                <Pressable
+                  style={[styles.outlinedButton, styles.buttonSpacing]}
+                  onPress={onClose}
+                >
+                  <Text style={styles.outlinedText}>Quay Lại</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.filledButton}
+                  onPress={handleAcceptOrder}
+                  disabled={isAccepting}
+                >
+                  <Text style={styles.filledText}>
+                    {isAccepting ? "Đang xử lý..." : "Nhận Đơn"}
+                  </Text>
+                </Pressable>
+              </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
         </KeyboardAvoidingView>
       </Modal>
 
       {/* Full Image Modal */}
       <Modal visible={showFullImage} transparent animationType="fade">
-        <TouchableOpacity style={styles.fullImageOverlay} onPress={() => setShowFullImage(false)}>
+        <TouchableOpacity
+          style={styles.fullImageOverlay}
+          onPress={() => setShowFullImage(false)}
+        >
           <Image
             source={{ uri: orderItem?.sampleSource }}
             style={styles.fullImage}

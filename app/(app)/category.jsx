@@ -21,7 +21,7 @@ import { useAuth } from "../../utils/authContext";
 import { OrderContext } from '../../utils/orderContext';
 
 const ManufacturingListPage = () => {
-  const { label } = useLocalSearchParams();
+  const { label, facilityCode } = useLocalSearchParams();
   const router = useRouter();
 
   const {orders, loading} = useContext(OrderContext);
@@ -41,7 +41,7 @@ const ManufacturingListPage = () => {
   const handleNavigateTo2ndPage = () => {
     router.navigate({
       pathname: 'accepted',
-      params: { label: label },
+      params: { label: label, facilityCode: facilityCode},
     });
   };
 
@@ -66,7 +66,9 @@ const ManufacturingListPage = () => {
 
     const isUserMatch = order.issuePlace === user.name;
 
-    return isAssigned  && isUserMatch; // && matchesLabel  
+    const facilityMatch = order.facilityType?.code === facilityCode;
+
+    return isAssigned  && isUserMatch && facilityMatch;  
   });
 
    const filteredOrders = orders.filter(order => {
@@ -79,7 +81,9 @@ const ManufacturingListPage = () => {
     const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
     const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
     
-    return searchMatch && statusMatch && dateMatch && isUnassigned;
+    const facilityMatch = order.facilityType?.code === facilityCode;
+
+    return searchMatch && statusMatch && dateMatch && isUnassigned && facilityMatch;
   });
 
   return (
