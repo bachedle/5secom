@@ -32,6 +32,8 @@ const AddStoreInfo = () => {
   const [country, setCountry] = useState([]);
   const [store, setStore] = useState([]);
 
+  const [filteredStore, setFilteredStore] = useState([])
+
   const selectedStoreType = draftOrder.facilityType?.id || "";
   const selectedStore = draftOrder.orgUnit?.id || "";
   const selectedCountry = draftOrder.country || "";
@@ -42,6 +44,28 @@ const AddStoreInfo = () => {
 
   const handleBack = () => router.back();
   const handleNext = () => router.push('/AddGuestInfo');
+
+
+  const filterStoresByCountry = (selectedCountryId, allStores, allCountries) => {
+  if (!selectedCountryId) {
+    setFilteredStore([]);
+    return;
+  }
+  
+  // Find the selected country object
+  const selectedCountryObj = allCountries.find(c => c.id === selectedCountryId);
+  if (!selectedCountryObj) {
+    setFilteredStore([]);
+    return;
+  }
+  
+  // Filter stores where store.namePath[1] matches selectedCountry.namePath[0]
+  const filtered = allStores.filter(store => 
+    store.namePath && store.namePath[1] === selectedCountryObj.namePath[0]
+  );
+  
+  setFilteredStore(filtered);
+};
 
 
   //option picker (co the mang qua context)
@@ -57,6 +81,10 @@ const AddStoreInfo = () => {
         const storeRes = await axios.get(`${API_URL}/org-unit/search?lvl=3`)
         setStore(storeRes.data.content);
 
+      if (selectedCountry) {
+        filterStoresByCountry(selectedCountry, storeRes.data.content, countryRes.data.content);
+      }
+
       } catch (error) {
         console.error("Error fetching options:", error);
       }
@@ -65,6 +93,9 @@ const AddStoreInfo = () => {
     fetchOptions();
   }, []);
 
+  useEffect(() => {
+    filterStoresByCountry(selectedCountry, store, country);
+  }, [selectedCountry, store, country]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9f9f9' }}>
@@ -106,7 +137,11 @@ const AddStoreInfo = () => {
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedCountry}
-                onValueChange={(value) => updateDraftPath("country",value)}
+                onValueChange={(value) => {
+                  updateDraftPath("country", value);
+                  // Clear store selection when country changes
+                  updateDraftPath("orgUnit", { id: "" });
+                }}
               >
                 <Picker.Item label="Chọn quốc gia" value="" />
                 {country.map((c) => (
@@ -119,10 +154,11 @@ const AddStoreInfo = () => {
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedStore}
+                enabled={selectedCountry !== ""}
                 onValueChange={(value) => updateDraftPath("orgUnit", { id: value })}
               >
                 <Picker.Item label="Chọn cửa hàng" value="" />
-                {store.map((s) => (
+                {filteredStore.map((s) => (
                   <Picker.Item key={s.id} label={s.name} value={s.id} />
                 ))}
               </Picker>
@@ -149,7 +185,7 @@ const AddStoreInfo = () => {
               <Switch
                 value={isPriority}
                 onValueChange={(value) => updateDraftPath("isPriority", value)}
-                trackColor={{ false: '#ccc', true: '#dd6b4d' }}
+                trackColor={{ false: '#ccc', true: '#1F509A' }}
                 thumbColor={'#fff'}
               />
             </View>
@@ -204,7 +240,7 @@ header: {
   },
   input: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: '#1F509A',
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -225,7 +261,7 @@ header: {
     width:'100%'
   },
   confirmButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: '#1F509A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -234,7 +270,7 @@ header: {
   },
   cancelButton: {
     backgroundColor: '#fff',
-    borderColor: '#dd6b4d',
+    borderColor: '#1F509A',
     borderWidth: 2,
     paddingVertical: 12,
     borderRadius: 8,
@@ -243,7 +279,7 @@ header: {
     marginRight: 8,
   },
   cancelText: {
-    color: '#dd6b4d',
+    color: '#1F509A',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -255,7 +291,7 @@ header: {
 
     pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: '#1F509A',
     borderRadius: 8,
     marginVertical: 8,
     backgroundColor: '#fff',

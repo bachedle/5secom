@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   subText: { fontSize: 13, fontWeight: "bold", marginTop: 12 },
   input: {
     borderWidth: 1,
-    borderColor: "#dd6b4d",
+    borderColor: "#1F509A",
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: "#dd6b4d",
+    borderColor: "#1F509A",
     borderRadius: 8,
     marginVertical: 8,
     backgroundColor: "#fff",
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   uploadButton: {
     borderWidth: 1,
-    borderColor: "#dd6b4d",
+    borderColor: "#1F509A",
     borderRadius: 8,
     padding: 15,
     marginVertical: 8,
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: "#fff",
-    borderColor: "#dd6b4d",
+    borderColor: "#1F509A",
     borderWidth: 2,
     paddingVertical: 12,
     width: "48%",
@@ -448,16 +448,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButton: {
-    backgroundColor: "#dd6b4d",
+    backgroundColor: "#1F509A",
     paddingVertical: 12,
     width: "48%",
     borderRadius: 8,
     alignItems: "center",
   },
-  cancelText: { color: "#dd6b4d", fontSize: 16, fontWeight: "bold" },
+  cancelText: { color: "#1F509A", fontSize: 16, fontWeight: "bold" },
   saveText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   saveContinueButton: {
-    backgroundColor: "#dd6b4d",
+    backgroundColor: "#1F509A",
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: "center",

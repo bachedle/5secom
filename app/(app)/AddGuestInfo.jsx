@@ -170,7 +170,7 @@ contentWrapper: {
   },
   input: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: '#1F509A',
     borderRadius: 8,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -189,7 +189,7 @@ footer: {
     bottom: 50, // ✅ stick to bottom instead of 50px up
   },
   confirmButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: '#1F509A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -198,7 +198,7 @@ footer: {
   },
   cancelButton: {
     backgroundColor: '#fff',
-    borderColor: '#dd6b4d',
+    borderColor: '#1F509A',
     borderWidth: 2,
     paddingVertical: 12,
     borderRadius: 8,
@@ -207,7 +207,7 @@ footer: {
     marginRight: 8,
   },
   cancelText: {
-    color: '#dd6b4d',
+    color: '#1F509A',
     fontSize: 16,
     fontWeight: 'bold',
   },

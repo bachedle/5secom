@@ -119,7 +119,7 @@ export default OrderListItem;
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#D4EBF8',
-    borderColor: '#E38E49',
+    borderColor: '#1F509A',
     borderWidth: 2,
     borderRadius: 12,
     marginVertical: 8,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   facilityTag: {
   flexDirection: 'row',
   alignItems: 'center',
-  backgroundColor: '#E38E49',
+  backgroundColor: '#1F509A',
   borderRadius: 16,
   paddingHorizontal: 12,
   paddingVertical: 6,

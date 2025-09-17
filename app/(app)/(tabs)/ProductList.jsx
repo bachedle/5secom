@@ -19,7 +19,6 @@ import OrderListItem from '../../../components/OrderListItem';
 import ModalFilter from '../../../components/modalFilter';
 import { AuthContext } from '../../../utils/authContext';
 import { OrderContext } from '../../../utils/orderContext';
-import * as SecureStore from 'expo-secure-store';
 
 const ProductListPage = () => {
   const router = useRouter();
@@ -36,7 +35,6 @@ const ProductListPage = () => {
     orders, 
     loading, 
     fetchOrders, 
-    hasMore, 
     loadingMore, 
   } = useContext(OrderContext);
 
@@ -131,7 +129,7 @@ const ProductListPage = () => {
           onPress={() => setModalVisible(true)}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="tune" size={20} color="#A34025" />
+          <MaterialIcons name="tune" size={20} color="#1F509A" />
         </TouchableOpacity>
       </View>
 
@@ -173,7 +171,7 @@ const ProductListPage = () => {
       {/* Initial loading overlay */}
       {loading && orders.length === 0 && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#E8775D" />
+          <ActivityIndicator size="large" color="#ffffffff" />
           <Text style={styles.loadingText}>Đang tải...</Text>
         </View>
       )}
@@ -203,7 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ACTIVE_TAB: {
-    backgroundColor: '#E8775D',
+    backgroundColor: '#0A3981',
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
@@ -228,13 +226,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 8,
-    borderColor: '#ccc',
+    borderColor: '#0A3981',
     borderWidth: 1,
   },
   FILTER_BUTTON: {
     marginLeft: 8,
     padding: 8,
-    backgroundColor: '#FFECE8',
+    backgroundColor: '#D4EBF8',
     borderRadius: 8,
   },
   

@@ -83,7 +83,7 @@ const AcceptedOrderPage = () => {
           onPress={() => setModalVisible(true)}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="tune" size={20} color="#1F509A" />
+          <MaterialIcons name="tune" size={20} color="#1F509A " />
         </TouchableOpacity>
       </View>
 

@@ -1,331 +1,210 @@
-// context/OptionsContext.js
-import { createContext, useState, useEffect, useContext, useCallback } from "react";
-import axios from "axios";
-import { AuthContext } from "./authContext";
-import * as SecureStore from "expo-secure-store";
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchAllOptions } from '../api/options';
 
-export const OptionsContext = createContext();
-
-const API_URL = "https://5secom.dientoan.vn/api";
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-const CACHE_PREFIX = "options_cache_";
-
-// Cache structure for each option type
-const createCacheEntry = (data) => ({
-  data,
-  timestamp: Date.now(),
-  expires: Date.now() + CACHE_DURATION,
-});
-
-const isCacheValid = (cacheEntry) => {
-  return cacheEntry && Date.now() < cacheEntry.expires;
+// Cache keys
+const CACHE_KEYS = {
+  OPTIONS_DATA: 'options_cache',
+  LAST_UPDATED: 'options_last_updated'
 };
 
-const getCacheKey = (optionType, userId) => {
-  // Ensure userId is valid, fallback to 'anonymous' if not
-  const validUserId = userId && String(userId).trim() ? String(userId) : 'anonymous';
-  return `${CACHE_PREFIX}${optionType}_${validUserId}`;
+// Cache duration (24 hours in milliseconds)
+const CACHE_DURATION = 24 * 60 * 60 * 1000;
+
+// Initial state
+const initialState = {
+  // Data
+  storeTypes: [],
+  countries: [],
+  stores: [],
+  sizes: [],
+  orderTypes: [],
+  skuOptions: [],
+  labelingStandards: [],
+  
+  // Loading states
+  isLoading: false,
+  isInitialized: false,
+  
+  // Error states
+  errors: {},
+  
+  // Cache info
+  lastUpdated: null,
+  cacheValid: false
 };
 
-export const OptionsProvider = ({ children }) => {
-  const authContext = useContext(AuthContext);
-  const token = authContext?.token ?? authContext?.authState?.token;
-  const userId = authContext?.user?.id;
-  const isLoggedIn = authContext?.isLoggedIn ?? !!token;
+// Action types
+const ACTIONS = {
+  SET_LOADING: 'SET_LOADING',
+  SET_OPTIONS: 'SET_OPTIONS',
+  SET_ERROR: 'SET_ERROR',
+  SET_INITIALIZED: 'SET_INITIALIZED',
+  UPDATE_CACHE_STATUS: 'UPDATE_CACHE_STATUS',
+  RESET_ERRORS: 'RESET_ERRORS'
+};
 
-  const [options, setOptions] = useState({
-    facilities: [],
-    storeTypes: [],
-    countries: [],
-    stores: [],
-    skuOptions: [],
-    sizes: [],
-    orderTypes: [],
-    labelingStandards: [],
-  });
-
-  const [loading, setLoading] = useState({
-    facilities: false,
-    storeTypes: false,
-    countries: false,
-    stores: false,
-    skuOptions: false,
-    sizes: false,
-    orderTypes: false,
-    labelingStandards: false,
-  });
-
-  const [errors, setErrors] = useState({});
-
-  // Generic cache operations
-  const getCachedData = useCallback(async (optionType) => {
-    try {
-      const cacheKey = getCacheKey(optionType, userId);
-      
-      // Validate cache key before using
-      if (!cacheKey || cacheKey.includes('undefined') || cacheKey.includes('null')) {
-        console.warn(`Invalid cache key for ${optionType}: ${cacheKey}`);
-        return null;
-      }
-      
-      const cached = await SecureStore.getItemAsync(cacheKey);
-      
-      if (cached) {
-        const parsedCache = JSON.parse(cached);
-        if (isCacheValid(parsedCache)) {
-          return parsedCache.data;
-        } else {
-          // Remove expired cache
-          await SecureStore.deleteItemAsync(cacheKey);
-        }
-      }
-    } catch (error) {
-      console.warn(`Error reading cache for ${optionType}:`, error.message || error);
-    }
-    return null;
-  }, [userId]);
-
-  const setCachedData = useCallback(async (optionType, data) => {
-    try {
-      const cacheKey = getCacheKey(optionType, userId);
-      
-      // Validate cache key before using
-      if (!cacheKey || cacheKey.includes('undefined') || cacheKey.includes('null')) {
-        console.warn(`Invalid cache key for ${optionType}: ${cacheKey}, skipping cache`);
-        return;
-      }
-      
-      const cacheEntry = createCacheEntry(data);
-      await SecureStore.setItemAsync(cacheKey, JSON.stringify(cacheEntry));
-    } catch (error) {
-      console.warn(`Error caching data for ${optionType}:`, error.message || error);
-    }
-  }, [userId]);
-
-  // Generic API fetch with cache
-  const fetchWithCache = useCallback(async (optionType, endpoint, transform = (data) => data) => {
-    if (!token) return [];
-
-    // Check cache first
-    const cached = await getCachedData(optionType);
-    if (cached) {
-      setOptions(prev => ({ ...prev, [optionType]: cached }));
-      return cached;
-    }
-
-    // Set loading state
-    setLoading(prev => ({ ...prev, [optionType]: true }));
-    setErrors(prev => ({ ...prev, [optionType]: null }));
-
-    try {
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+// Reducer
+const optionsReducer = (state, action) => {
+  switch (action.type) {
+    case ACTIONS.SET_LOADING:
+      return { ...state, isLoading: action.payload };
+    
+    case ACTIONS.SET_OPTIONS:
+      return {
+        ...state,
+        ...action.payload.data,
+        errors: action.payload.errors || {},
+        lastUpdated: Date.now(),
+        cacheValid: true,
+        isLoading: false
       };
-
-      const response = await axios.get(`${API_URL}${endpoint}`, { headers });
-      const transformedData = transform(response.data.content || response.data || []);
-
-      // Update state and cache
-      setOptions(prev => ({ ...prev, [optionType]: transformedData }));
-      await setCachedData(optionType, transformedData);
-
-      return transformedData;
-    } catch (error) {
-      console.error(`Error fetching ${optionType}:`, error);
-      setErrors(prev => ({ 
-        ...prev, 
-        [optionType]: error.response?.data?.message || error.message 
-      }));
-      return [];
-    } finally {
-      setLoading(prev => ({ ...prev, [optionType]: false }));
-    }
-  }, [token, getCachedData, setCachedData]);
-
-  // Specific fetch functions
-  const fetchFacilities = useCallback(() => {
-    return fetchWithCache('facilities', '/facility/search');
-  }, [fetchWithCache]);
-
-  const fetchStoreTypes = useCallback(() => {
-    return fetchWithCache('storeTypes', '/org-unit/search?lvl=1');
-  }, [fetchWithCache]);
-
-  const fetchCountries = useCallback(() => {
-    return fetchWithCache('countries', '/org-unit/search?lvl=2');
-  }, [fetchWithCache]);
-
-  const fetchStores = useCallback(() => {
-    return fetchWithCache('stores', '/org-unit/search?lvl=3');
-  }, [fetchWithCache]);
-
-  const fetchSkuOptions = useCallback(() => {
-    return fetchWithCache('skuOptions', '/option/find?optionGroupCode=skudesigns');
-  }, [fetchWithCache]);
-
-  const fetchSizes = useCallback(() => {
-    return fetchWithCache('sizes', '/option/find?optionGroupCode=state-test');
-  }, [fetchWithCache]);
-
-  const fetchOrderTypes = useCallback(() => {
-    return fetchWithCache('orderTypes', '/option/find?optionGroupCode=facility-type');
-  }, [fetchWithCache]);
-
-  const fetchLabelingStandards = useCallback(() => {
-    return fetchWithCache('labelingStandards', '/option/find?optionGroupCode=type-of-goods');
-  }, [fetchWithCache]);
-
-  // Load all essential options on login
-  const loadEssentialOptions = useCallback(async () => {
-    if (!isLoggedIn || !token) return;
-
-    console.log('Loading essential options...');
     
-    // Load in parallel for better performance
-    await Promise.allSettled([
-      fetchFacilities(),
-      fetchStoreTypes(),
-      fetchCountries(),
-      fetchStores(),
-      fetchSkuOptions(),
-      fetchSizes(),
-      fetchOrderTypes(),
-      fetchLabelingStandards(),
-    ]);
-
-    console.log('Essential options loaded');
-  }, [
-    isLoggedIn, 
-    token, 
-    fetchFacilities, 
-    fetchStoreTypes, 
-    fetchCountries, 
-    fetchStores,
-    fetchSkuOptions, 
-    fetchSizes, 
-    fetchOrderTypes, 
-    fetchLabelingStandards
-  ]);
-
-  // Clean cache for different user
-  const cleanCacheForUser = useCallback(async () => {
-    if (!userId) {
-      console.log('No userId available, skipping cache cleanup');
-      return;
-    }
+    case ACTIONS.SET_ERROR:
+      return {
+        ...state,
+        errors: { ...state.errors, [action.payload.type]: action.payload.error },
+        isLoading: false
+      };
     
+    case ACTIONS.SET_INITIALIZED:
+      return { ...state, isInitialized: action.payload };
+    
+    case ACTIONS.UPDATE_CACHE_STATUS:
+      return { ...state, cacheValid: action.payload };
+    
+    case ACTIONS.RESET_ERRORS:
+      return { ...state, errors: {} };
+    
+    default:
+      return state;
+  }
+};
+
+// Create context
+const OptionsContext = createContext();
+
+// Provider component
+export const OptionsProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(optionsReducer, initialState);
+
+  // Check if cache is valid
+  const isCacheValid = (timestamp) => {
+    if (!timestamp) return false;
+    return Date.now() - timestamp < CACHE_DURATION;
+  };
+
+  // Load options from cache
+  const loadFromCache = async () => {
     try {
-      const allKeys = await SecureStore.getAllKeysAsync?.() || [];
-      const cacheKeys = allKeys.filter(key => key.startsWith(CACHE_PREFIX));
+      const cachedData = await AsyncStorage.getItem(CACHE_KEYS.OPTIONS_DATA);
+      const lastUpdated = await AsyncStorage.getItem(CACHE_KEYS.LAST_UPDATED);
       
-      for (const key of cacheKeys) {
-        try {
-          // Remove cache entries that don't belong to current user
-          const keyParts = key.split('_');
-          const keyUserId = keyParts[keyParts.length - 1]; // Get the last part as userId
-          
-          if (keyUserId !== String(userId) && keyUserId !== 'anonymous') {
-            await SecureStore.deleteItemAsync(key);
-            console.log(`Cleaned cache key: ${key}`);
-          }
-        } catch (error) {
-          console.warn(`Error processing cache key ${key}:`, error);
+      if (cachedData && lastUpdated) {
+        const parsedData = JSON.parse(cachedData);
+        const timestamp = parseInt(lastUpdated);
+        
+        if (isCacheValid(timestamp)) {
+          dispatch({
+            type: ACTIONS.SET_OPTIONS,
+            payload: { data: parsedData, errors: {} }
+          });
+          dispatch({ type: ACTIONS.SET_INITIALIZED, payload: true });
+          return true;
         }
       }
     } catch (error) {
-      console.warn('Error cleaning cache:', error.message || error);
+      console.error('Error loading from cache:', error);
     }
-  }, [userId]);
+    return false;
+  };
 
-  // Load options on auth change
-  useEffect(() => {
-    if (isLoggedIn && token && userId) {
-      cleanCacheForUser().then(() => {
-        loadEssentialOptions();
-      });
-    } else {
-      // Reset options when logged out
-      setOptions({
-        facilities: [],
-        storeTypes: [],
-        countries: [],
-        stores: [],
-        skuOptions: [],
-        sizes: [],
-        orderTypes: [],
-        labelingStandards: [],
-      });
-    }
-  }, [isLoggedIn, token, userId, loadEssentialOptions, cleanCacheForUser]);
-
-  // Get filtered options (e.g., sizes based on selected SKU)
-  const getFilteredSizes = useCallback((skuId) => {
-    if (!skuId) return options.sizes;
-    // Add your filtering logic here based on your API relationship
-    return options.sizes.filter(size => {
-      // Example filtering - adjust based on your actual data structure
-      return !size.skuOpt || size.skuOpt.id === skuId;
-    });
-  }, [options.sizes]);
-
-  // Force refresh specific option
-  const refreshOption = useCallback(async (optionType) => {
-    const cacheKey = getCacheKey(optionType, userId);
+  // Save options to cache
+  const saveToCache = async (data) => {
     try {
-      await SecureStore.deleteItemAsync(cacheKey);
+      await AsyncStorage.setItem(CACHE_KEYS.OPTIONS_DATA, JSON.stringify(data));
+      await AsyncStorage.setItem(CACHE_KEYS.LAST_UPDATED, Date.now().toString());
     } catch (error) {
-      console.warn(`Error clearing cache for ${optionType}:`, error);
+      console.error('Error saving to cache:', error);
     }
+  };
 
-    // Refetch the option
-    switch (optionType) {
-      case 'facilities': return fetchFacilities();
-      case 'storeTypes': return fetchStoreTypes();
-      case 'countries': return fetchCountries();
-      case 'stores': return fetchStores();
-      case 'skuOptions': return fetchSkuOptions();
-      case 'sizes': return fetchSizes();
-      case 'orderTypes': return fetchOrderTypes();
-      case 'labelingStandards': return fetchLabelingStandards();
-      default: return Promise.resolve([]);
+  // Fetch fresh options from API
+  const fetchFreshOptions = async (force = false) => {
+    if (state.isLoading && !force) return;
+    
+    dispatch({ type: ACTIONS.SET_LOADING, payload: true });
+    dispatch({ type: ACTIONS.RESET_ERRORS });
+
+    try {
+      const result = await fetchAllOptions();
+      
+      // Extract data (exclude errors)
+      const { errors, ...optionsData } = result;
+      
+      dispatch({
+        type: ACTIONS.SET_OPTIONS,
+        payload: { data: optionsData, errors }
+      });
+
+      // Save to cache
+      await saveToCache(optionsData);
+      
+      if (!state.isInitialized) {
+        dispatch({ type: ACTIONS.SET_INITIALIZED, payload: true });
+      }
+
+    } catch (error) {
+      console.error('Error fetching options:', error);
+      dispatch({
+        type: ACTIONS.SET_ERROR,
+        payload: { type: 'fetch', error: error.message }
+      });
     }
-  }, [
-    userId,
-    fetchFacilities,
-    fetchStoreTypes,
-    fetchCountries,
-    fetchStores,
-    fetchSkuOptions,
-    fetchSizes,
-    fetchOrderTypes,
-    fetchLabelingStandards,
-  ]);
+  };
 
+  // Initialize options (try cache first, then API)
+  const initializeOptions = async () => {
+    const cacheLoaded = await loadFromCache();
+    
+    if (!cacheLoaded) {
+      await fetchFreshOptions();
+    }
+  };
+
+  // Refresh options (force fetch from API)
+  const refreshOptions = async () => {
+    await fetchFreshOptions(true);
+  };
+
+  // Clear cache
+  const clearCache = async () => {
+    try {
+      await AsyncStorage.removeItem(CACHE_KEYS.OPTIONS_DATA);
+      await AsyncStorage.removeItem(CACHE_KEYS.LAST_UPDATED);
+      dispatch({ type: ACTIONS.UPDATE_CACHE_STATUS, payload: false });
+    } catch (error) {
+      console.error('Error clearing cache:', error);
+    }
+  };
+
+  // Initialize on mount
+  useEffect(() => {
+    initializeOptions();
+  }, []);
+
+  // Context value
   const value = {
-    options,
-    loading,
-    errors,
+    // State
+    ...state,
     
-    // Fetch functions
-    fetchFacilities,
-    fetchStoreTypes,
-    fetchCountries,
-    fetchStores,
-    fetchSkuOptions,
-    fetchSizes,
-    fetchOrderTypes,
-    fetchLabelingStandards,
+    // Actions
+    refreshOptions,
+    clearCache,
+    initializeOptions,
     
-    // Utility functions
-    loadEssentialOptions,
-    getFilteredSizes,
-    refreshOption,
-    
-    // Loading states
-    isLoading: Object.values(loading).some(l => l),
-    hasErrors: Object.keys(errors).length > 0,
+    // Utilities
+    isCacheValid: () => isCacheValid(state.lastUpdated),
   };
 
   return (
@@ -335,10 +214,11 @@ export const OptionsProvider = ({ children }) => {
   );
 };
 
-export const useOptions = () => {
+// Custom hook to use options context
+export const useOptionsContext = () => {
   const context = useContext(OptionsContext);
   if (!context) {
-    throw new Error('useOptions must be used within an OptionsProvider');
+    throw new Error('useOptionsContext must be used within an OptionsProvider');
   }
   return context;
 };
