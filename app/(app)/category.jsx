@@ -123,7 +123,7 @@ const ManufacturingListPage = () => {
           onPress={() => setModalVisible(true)}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="tune" size={20} color="#A34025" />
+          <MaterialIcons name="tune" size={20} color="#1F509A" />
         </TouchableOpacity>
       </View>
 
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ACTIVE_TAB: {
-    backgroundColor: '#E8775D',
+    backgroundColor: '#0A3981',
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   BADGE_TEXT: {
-    color: '#A34025',
+    color: '#0A3981',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -260,13 +260,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 8,
-    borderColor: '#ccc',
+    borderColor: '#0A3981',
     borderWidth: 1,
   },
   FILTER_BUTTON: {
     marginLeft: 8,
     padding: 8,
-    backgroundColor: '#FFECE8',
+    backgroundColor: '#D4EBF8',
     borderRadius: 8,
   },
   CARDS_WRAPPER: {
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   },
   filledButton: {
     flex: 1,
-    backgroundColor: '#f18060',
+    backgroundColor: '#0A3981',
     paddingVertical: 10,
     
     borderRadius: 8,

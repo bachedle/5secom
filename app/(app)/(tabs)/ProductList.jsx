@@ -75,12 +75,12 @@ const ProductListPage = () => {
     fetchOrders(true); // Pass true to indicate refresh
   };
 
-  // Handle infinite scroll
-  const handleLoadMore = () => {
-    if (hasMore && !loadingMore) {
-      loadMoreOrders();
-    }
-  };
+  // // Handle infinite scroll
+  // const handleLoadMore = () => {
+  //   if (hasMore && !loadingMore) {
+  //     loadMoreOrders();
+  //   }
+  // };
 
   // Render footer for loading indicator
   const renderFooter = () => {
@@ -151,10 +151,10 @@ const ProductListPage = () => {
         keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
         renderItem={({ item }) => <OrderListItem orderItem={item} />}
         
-        // Infinite scroll
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1} // Trigger when 10% from bottom
-        ListFooterComponent={renderFooter}
+        // // Infinite scroll
+        // onEndReached={handleLoadMore}
+        // onEndReachedThreshold={0.1} // Trigger when 10% from bottom
+        // ListFooterComponent={renderFooter}
         
         // Styling
         contentContainerStyle={{ paddingBottom: 80 }}

@@ -17,11 +17,11 @@ export default function TabLayout() {
           tabBarStyle: {
             height: 100,
             
-            backgroundColor: '#7C444F',
+            backgroundColor: '#E38E49',
             borderTopWidth: 0,
           },
-          tabBarActiveTintColor: '#F39E60',
-          tabBarInactiveTintColor: '#FFFFFF80',
+          tabBarActiveTintColor: '#0A3981',
+          tabBarInactiveTintColor: '#ffffffff',
         }}
       >
         <Tabs.Screen

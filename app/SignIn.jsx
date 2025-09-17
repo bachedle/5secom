@@ -84,7 +84,7 @@ const LoginPage = () => {
           <MaterialCommunityIcons
             name={rememberMe ? 'checkbox-marked' : 'checkbox-blank-outline'}
             size={22}
-            color="#dd6b4d"
+            color="#0A3981"
           />
           <Text style={styles.rememberText}>Remember me</Text>
         </TouchableOpacity>
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: '#0A3981',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   signInButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: '#1F509A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',

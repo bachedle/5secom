@@ -86,7 +86,7 @@ export default HomePage;
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#E16A54',
+    backgroundColor: '#0A3981',
   },
 
   headerWrapper: {
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0B5AA',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 40,
+    borderRadius: 10,
     fontWeight: 'bold',
     color: '#000',
   },
