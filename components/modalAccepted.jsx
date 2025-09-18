@@ -36,7 +36,7 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
       return;
     }
 
-    if (orderItem.issuePlace !== user.name) {
+    if (orderItem.issuePlace !== user.name && orderItem.issuePlace !== user.username) {
       Alert.alert("Lỗi", "Bạn không có quyền trả đơn này");
       return;
     }

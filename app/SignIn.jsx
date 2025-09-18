@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useOrder } from '../utils/orderContext';
 import { useAuth } from '../utils/authContext';
 
 const LoginPage = () => {
   const router = useRouter();
   const { logIn, loading, error } = useAuth();
+  const { resetDraft } = useOrder();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +34,7 @@ const LoginPage = () => {
     if (!validateLogin()) return;
 
     const result = await logIn(username, password);
+    await resetDraft();
 
     if (result.success) {
       router.replace('(tabs)'); // move to main app

@@ -22,7 +22,7 @@ const ModalEditAction = ({ visible, onClose, orderItem }) => {
   const handleEdit = () => {
     onClose(); // Close modal first
     // Navigate to edit flow
-    router.push(`/AddStoreInfo?editId=${orderItem?.id}`);
+    router.push(`/EditStoreInfo?editId=${orderItem?.id}`);
   };
 
   return (

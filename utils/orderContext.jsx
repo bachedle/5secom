@@ -1,7 +1,18 @@
 // context/OrderContext.js
-import { createContext, useState, useEffect, useContext, useMemo } from "react";
-import { getOrders, getFacilities, createOrder, updateOrder } from "../api/order";
-import { AuthContext } from "./authContext";
+import {
+  getOrders,
+  getOrderByID,
+  createOrder,
+  updateOrder,
+  getFacilities,
+} from "../api/order"; // ✅ reuse API helpers
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useMemo,
+} from "react";
 import * as SecureStore from "expo-secure-store";
 
 export const OrderContext = createContext();
@@ -40,7 +51,6 @@ const initialDraft = {
   attr5: null,
 };
 
- 
 const cleanOrder = (draft) => {
   const cleaned = { ...draft };
   ["facilityType", "stateOpt", "orgUnit", "skuOpt"].forEach((key) => {
@@ -55,20 +65,16 @@ const cleanOrder = (draft) => {
 };
 
 export const OrderProvider = ({ children }) => {
-  const authContext = useContext(AuthContext);
-  const isLoggedIn = authContext?.isLoggedIn ?? !!authContext?.authState?.token;
-  const token = authContext?.token ?? authContext?.authState?.token;
-
   const [orders, setOrders] = useState([]);
-  const [totalOrders, setTotalOrders] = useState(0); 
+  const [totalOrders, setTotalOrders] = useState(0);
   const [loading, setLoading] = useState(false);
   const [draftOrder, setDraftOrder] = useState(initialDraft);
 
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true); 
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-    // Edit mode states
+  // Edit mode states
   const [editMode, setEditMode] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState(null);
 
@@ -76,10 +82,12 @@ export const OrderProvider = ({ children }) => {
   const [facilities, setFacilities] = useState([]);
   const [loadingFacilities, setLoadingFacilities] = useState(false);
 
+  // Fetch facilities
   const fetchFacilities = async () => {
-    if (!isLoggedIn || !token) return;
-    setLoadingFacilities(true);
     try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (!token) return;
+      setLoadingFacilities(true);
       const data = await getFacilities(token);
       setFacilities(data || []);
     } catch (err) {
@@ -90,16 +98,105 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
+  // Fetch orders
+  const fetchOrders = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (!token) return;
+      setLoading(true);
 
-    // Fetch facilities after login
-  useEffect(() => {
-    if (isLoggedIn && token) {
-      fetchFacilities();
+      const data = await getOrders(token); // ✅ reuse order.js
+      const allOrders = data?.content || [];
+
+      allOrders.sort(
+        (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
+      );
+
+      setOrders(allOrders);
+      setTotalOrders(data?.totalElements || allOrders.length);
+      setPage(0);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
     }
-  }, [isLoggedIn, token]);
+  };
+
+  const addOrder = async (newOrder) => {
+    try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (!token) throw new Error("Not authenticated");
+
+      const created = await createOrder(newOrder, token); // ✅ reuse order.js
+      await fetchOrders();
+      await resetDraft();
+      return created;
+    } catch (error) {
+      console.error("Error creating order:", error);
+      throw error;
+    }
+  };
+
+const editOrder = async (id, updates) => {
+  try {
+    const token = await SecureStore.getItemAsync("authToken");
+    if (!token) throw new Error("Not authenticated");
+
+    const updated = await updateOrder(id, updates, token);
+    
+    // Remove this line - let fetchOrders handle the update
+    // setOrders((prev) => prev.map((order) => (order.id === id ? updated : order)));
+    
+    await fetchOrders(); // This will get the latest data from API
+    return updated;
+  } catch (error) {
+    console.error("Error updating order:", error);
+    throw error;
+  }
+};
+
+const submitDraft = async () => {
+  if (draftOrder.id) {
+    // editing an existing order
+    return await updateOrder(draftOrder);
+  } else {
+    // creating new order
+    return await createOrder(draftOrder);
+  }
+};
 
 
-  // Load saved draft
+  const loadOrderForEdit = async (id) => {
+  try {
+    const token = await SecureStore.getItemAsync("authToken");
+    if (!token) throw new Error("Not authenticated");
+
+    const order = await getOrderByID(id, token);
+    setDraftOrder(order);
+    setEditMode(true);
+    setEditingOrderId(id);
+  } catch (error) {
+    console.error("Error loading order for edit:", error);
+  }
+};
+
+  const updateDraft = (partial) =>
+    setDraftOrder((prev) => ({ ...prev, ...partial }));
+
+  const updateDraftPath = (field, value) =>
+    setDraftOrder((prev) => ({ ...prev, [field]: value }));
+
+  const resetDraft = async () => {
+    setDraftOrder(initialDraft);
+    try {
+      await SecureStore.deleteItemAsync("orderDraft");
+    } catch (error) {
+      console.error("Error clearing draft:", error);
+    }
+  };
+
+  // Load saved draft on mount
   useEffect(() => {
     const loadDraft = async () => {
       try {
@@ -124,109 +221,17 @@ export const OrderProvider = ({ children }) => {
     saveDraft();
   }, [draftOrder]);
 
-  const updateDraft = (partial) =>
-    setDraftOrder((prev) => ({ ...prev, ...partial }));
-
-  const updateDraftPath = (field, value) =>
-    setDraftOrder((prev) => ({ ...prev, [field]: value }));
-
-  const resetDraft = async () => {
-    setDraftOrder(initialDraft);
-    try {
-      await SecureStore.deleteItemAsync("orderDraft");
-    } catch (error) {
-      console.error("Error clearing draft:", error);
-    }
-  };
-
-const fetchOrders = async () => {
-  if (!isLoggedIn || !token) return;
-  setLoading(true);
-
-  try {
-    const data = await getOrders(token);   // no more pageNumber/pageSize
-    const allOrders = data?.content || [];
-
-    // sort latest first
-    allOrders.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
-
-    setOrders(allOrders);
-    setTotalOrders(data?.totalElements || allOrders.length);
-
-    // setHasMore(false);  // disable infinite scroll
-    setPage(0);
-    
-  } catch (err) {
-    console.error("Error fetching orders:", err);
-    setOrders([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-  const addOrder = async (newOrder) => {
-    if (!isLoggedIn || !token) {
-      console.error("No authentication found!");
-      return;
-    }
-    try {
-      const created = await createOrder(newOrder, token);
-      console.log("✅ Order created:", created);
-
-      // Refresh from backend to stay in sync
-      await fetchOrders();
-      await resetDraft();
-      return created;
-    } catch (error) {
-      console.error("Error creating order:", error);
-      throw error;
-    }
-  };
-
-  const submitDraft = async () => {
-    try {
-      const cleaned = cleanOrder(draftOrder);
-      return await addOrder(cleaned); // ✅ reuse addOrder
-    } catch (error) {
-      console.error("❌ Error in submitDraft:", error);
-      throw error;
-    }
-  };
-
-  const editOrder = async (id, updates) => {
-    if (!isLoggedIn || !token) {
-      console.error("No authentication found!");
-      return;
-    }
-    try {
-      const updated = await updateOrder(id, updates, token);
-      setOrders((prev) =>
-        prev.map((order) => (order.id === id ? updated : order))
-      );
-      await fetchOrders();
-
-      return updated;
-      
-    } catch (error) {
-      console.error("Error updating order:", error);
-      throw error;
-    }
-  };
-
+  // Initial load
   useEffect(() => {
-    if (isLoggedIn && token) {
-      fetchOrders();
-    }
-  }, [isLoggedIn, token]);
+    fetchOrders();
+    fetchFacilities();
+  }, []);
 
   const value = useMemo(
     () => ({
       orders,
       setOrders,
       loading,
-      setLoading,
       fetchOrders,
       totalOrders,
       addOrder,
@@ -241,13 +246,24 @@ const fetchOrders = async () => {
       page,
       hasMore,
       loadingMore,
-
       facilities,
       fetchFacilities,
       loadingFacilities,
-
+      editMode,
+      setEditMode,
+      editingOrderId,
+      setEditingOrderId,
+      loadOrderForEdit
     }),
-    [orders, loading, draftOrder, facilities, loadingFacilities]
+    [
+      orders,
+      loading,
+      draftOrder,
+      facilities,
+      loadingFacilities,
+      editMode,
+      editingOrderId,
+    ]
   );
 
   return (
