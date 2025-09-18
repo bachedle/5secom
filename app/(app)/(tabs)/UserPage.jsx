@@ -178,7 +178,7 @@ const UserPage = () => {
                   <MaterialCommunityIcons 
                     name="account-edit" 
                     size={20} 
-                    color="#dd6b4d" 
+                    color="#1F509A" 
                     style={styles.settingsIcon}
                   />
                   <Text style={styles.settingsText}>Chỉnh sửa thông tin</Text>
@@ -193,7 +193,7 @@ const UserPage = () => {
                 <MaterialCommunityIcons 
                   name="lock-outline" 
                   size={20} 
-                  color="#dd6b4d" 
+                  color="#1F509A" 
                   style={styles.settingsIcon}
                 />
                 <Text style={styles.settingsText}>Đổi mật khẩu</Text>
@@ -224,12 +224,12 @@ export default UserPage;
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#E16A54',
+    backgroundColor: '#1F509A',
   },
   headerWrapper: {
     width: '100%',
     height: '25%',
-    backgroundColor: '#E16A54',
+    backgroundColor: '#1F509A',
   },
   headerBackground: {
     width: '100%',
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   signInButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: '#1F509A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',

@@ -22,9 +22,9 @@ import { useOrder } from '../../utils/orderContext';
 const API_URL = "https://5secom.dientoan.vn/api";
 
 
-const AddStoreInfo = () => {
+const EditStoreInfo = () => {
 
-  const { draftOrder, updateDraftPath } = useOrder();  
+  const { draftOrder, updateDraftPath, editMode } = useOrder();  
 
   const router = useRouter();
 
@@ -43,7 +43,7 @@ const AddStoreInfo = () => {
 
 
   const handleBack = () => router.back();
-  const handleNext = () => router.push('/AddGuestInfo');
+  const handleNext = () => router.push('/EditGuestInfo');
 
 
   const filterStoresByCountry = (selectedCountryId, allStores, allCountries) => {
@@ -100,9 +100,11 @@ const AddStoreInfo = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9f9f9' }}>
       {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Tạo Đơn</Text>
-      </View>
+    <View style={styles.header}>
+    <Text style={styles.headerText}>
+        {editMode ? "Chỉnh sửa Đơn" : "Tạo Đơn"}
+    </Text>
+    </View>
 
       {/* FORM AREA */}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -206,7 +208,7 @@ const AddStoreInfo = () => {
   );
 };
 
-export default AddStoreInfo;
+export default EditStoreInfo;
 
 const styles = StyleSheet.create({
 header: {

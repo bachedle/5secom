@@ -1,3 +1,4 @@
+
 import {
   StyleSheet,
   Text,
@@ -19,10 +20,10 @@ import { useOrder } from '../../utils/orderContext';
 const HEADER_HEIGHT = 100;
 const FOOTER_HEIGHT = 80;
 
-const AddGuestInfo = () => {
+const EditGuestInfo = () => {
   const router = useRouter();
 
-  const { draftOrder, updateDraftPath } = useOrder();  
+  const { draftOrder, updateDraftPath, editMode } = useOrder();  
 
 
   const handleBack = () => {
@@ -30,16 +31,18 @@ const AddGuestInfo = () => {
   };
 
   const handleNext = () => {
-    router.push('/AddOrderInfo');
+    router.push('/EditOrderInfo');
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f9f9f9' }}>
 
       {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Tạo Đơn</Text>
-      </View>
+    <View style={styles.header}>
+        <Text style={styles.headerText}>
+            {editMode ? "Chỉnh sửa Đơn" : "Tạo Đơn"}
+        </Text>
+    </View>
 
       {/* CONTENT */}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -131,7 +134,7 @@ const AddGuestInfo = () => {
   );
 };
 
-export default AddGuestInfo;
+export default EditGuestInfo;
 
 const styles = StyleSheet.create({
   header: {

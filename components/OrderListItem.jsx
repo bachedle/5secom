@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import ModalTest from '../components/modalTest';
+import ModalEdit from '../components/modalEdit';
 import ModalAccepted from '../components/modalAccepted';
 import { formatNumber } from '../utils/numberFormat';
 
@@ -97,7 +98,13 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
       </TouchableOpacity>
 
       {/* Correct modal */}
-      {modalType === 'receive' ? (
+      {modalType === 'edit' ? (
+        <ModalEdit
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          orderItem={orderItem}
+        />
+      ) : modalType === 'receive' ?  ( 
         <ModalTest
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
@@ -118,8 +125,8 @@ export default OrderListItem;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff4e8',
-    borderColor: '#f18060',
+    backgroundColor: '#D4EBF8',
+    borderColor: '#1F509A',
     borderWidth: 2,
     borderRadius: 12,
     marginVertical: 8,
@@ -186,7 +193,7 @@ const styles = StyleSheet.create({
   facilityTag: {
   flexDirection: 'row',
   alignItems: 'center',
-  backgroundColor: '#e0f7fa',
+  backgroundColor: '#1F509A',
   borderRadius: 16,
   paddingHorizontal: 12,
   paddingVertical: 6,
@@ -198,7 +205,7 @@ facilityIcon: {
 },
 facilityText: {
   fontWeight: '600',
-  color: '#00796b',
+  color: '#ffffffff',
 },
 
 statusTag: {

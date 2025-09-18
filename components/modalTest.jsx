@@ -41,6 +41,7 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
       };
 
       await editOrder(orderItem.id, updates);
+      console.log(updates)
       Alert.alert("Nhận đơn thành công!");
 
       // Close modal after successful update

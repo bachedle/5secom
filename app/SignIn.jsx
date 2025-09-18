@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useOrder } from '../utils/orderContext';
 import { useAuth } from '../utils/authContext';
 
 const LoginPage = () => {
   const router = useRouter();
   const { logIn, loading, error } = useAuth();
+  const { resetDraft } = useOrder();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -32,6 +34,7 @@ const LoginPage = () => {
     if (!validateLogin()) return;
 
     const result = await logIn(username, password);
+    await resetDraft();
 
     if (result.success) {
       router.replace('(tabs)'); // move to main app
@@ -84,7 +87,7 @@ const LoginPage = () => {
           <MaterialCommunityIcons
             name={rememberMe ? 'checkbox-marked' : 'checkbox-blank-outline'}
             size={22}
-            color="#dd6b4d"
+            color="#0A3981"
           />
           <Text style={styles.rememberText}>Remember me</Text>
         </TouchableOpacity>
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: '#0A3981',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -239,7 +242,7 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   signInButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: '#1F509A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',

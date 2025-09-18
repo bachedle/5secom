@@ -9,6 +9,8 @@ import {
   Pressable,
   Platform,
   KeyboardAvoidingView,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useState, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -17,14 +19,13 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import OrderListItem from '../../components/OrderListItem';
 import { useAuth } from "../../utils/authContext";
-
 import { OrderContext } from '../../utils/orderContext';
 
 const ManufacturingListPage = () => {
   const { label, facilityCode } = useLocalSearchParams();
   const router = useRouter();
 
-  const {orders, loading} = useContext(OrderContext);
+  const { orders, loading, fetchOrders } = useContext(OrderContext);
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -32,7 +33,7 @@ const ManufacturingListPage = () => {
   const { user } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
-  
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleBack = () => {
     router.dismiss();
@@ -51,7 +52,6 @@ const ManufacturingListPage = () => {
   };
 
   const confirmFilter = () => {
-    // You can apply date filtering logic here
     setModalVisible(false);
   };
 
@@ -60,29 +60,34 @@ const ManufacturingListPage = () => {
     setModalVisible(false);
   };
 
-    const acceptedOrder = orders.filter((order) => {
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchOrders();
+    } catch (error) {
+      console.error('Error refreshing orders:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
+  const acceptedOrder = orders.filter((order) => {
     const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
-
     const isUserMatch = order.issuePlace === user.name;
-
     const facilityMatch = order.facilityType?.code === facilityCode;
-
-    return isAssigned  && isUserMatch && facilityMatch;  
+    return isAssigned && isUserMatch && facilityMatch;  
   });
 
-   const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders.filter(order => {
     const isUnassigned = order.issuePlace === 'unassigned' || order.issuePlace === null;
-
     const searchMatch =
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
     const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
     const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
-    
     const facilityMatch = order.facilityType?.code === facilityCode;
-
     return searchMatch && statusMatch && dateMatch && isUnassigned && facilityMatch;
   });
 
@@ -123,7 +128,7 @@ const ManufacturingListPage = () => {
           onPress={() => setModalVisible(true)}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="tune" size={20} color="#A34025" />
+          <MaterialIcons name="tune" size={20} color="#1F509A" />
         </TouchableOpacity>
       </View>
 
@@ -188,19 +193,40 @@ const ManufacturingListPage = () => {
         renderItem={({ item }) => <OrderListItem orderItem={item} />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
         contentContainerStyle={styles.CARDS_WRAPPER}
-
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#1F509A']}
+            tintColor="#1F509A"
+          />
+        }
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Không có đơn hàng</Text>
+            {loading ? (
+              <>
+                <ActivityIndicator size="large" color="#1F509A" />
+                <Text style={styles.loadingText}>Đang tải...</Text>
+              </>
+            ) : (
+              <Text style={styles.emptyText}>Không có đơn hàng</Text>
+            )}
           </View>
         )}
       />
+
+      {/* Initial loading overlay */}
+      {loading && orders.length === 0 && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#1F509A" />
+          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+        </View>
+      )}
     </View>
   );
 };
 
 export default ManufacturingListPage;
-
 
 const styles = StyleSheet.create({
   CONTAINER: {
@@ -224,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ACTIVE_TAB: {
-    backgroundColor: '#E8775D',
+    backgroundColor: '#0A3981',
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
@@ -246,7 +272,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   BADGE_TEXT: {
-    color: '#A34025',
+    color: '#0A3981',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -260,13 +286,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 8,
-    borderColor: '#ccc',
+    borderColor: '#0A3981',
     borderWidth: 1,
   },
   FILTER_BUTTON: {
     marginLeft: 8,
     padding: 8,
-    backgroundColor: '#FFECE8',
+    backgroundColor: '#D4EBF8',
     borderRadius: 8,
   },
   CARDS_WRAPPER: {
@@ -327,9 +353,8 @@ const styles = StyleSheet.create({
   },
   filledButton: {
     flex: 1,
-    backgroundColor: '#f18060',
+    backgroundColor: '#0A3981',
     paddingVertical: 10,
-    
     borderRadius: 8,
   },
   filledText: {
@@ -351,9 +376,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 50,
   },
-    emptyText: {
+  emptyText: {
     fontSize: 16,
     color: "#888",
     fontWeight: "500",
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(247, 246, 246, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

@@ -9,6 +9,8 @@ import {
   Pressable,
   Platform,
   KeyboardAvoidingView,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useState, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -18,7 +20,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import OrderListItem from '../../components/OrderListItem';
 import { useAuth } from "../../utils/authContext";
-
 import { OrderContext } from '../../utils/orderContext';
 
 const AcceptedOrderPage = () => {
@@ -27,12 +28,11 @@ const AcceptedOrderPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
 
   const { label, facilityCode } = useLocalSearchParams();
-
-  const { orders, loading } = useContext(OrderContext);
-  
+  const { orders, loading, fetchOrders } = useContext(OrderContext);
 
   const handleBack = () => {
     router.dismiss();
@@ -41,18 +41,25 @@ const AcceptedOrderPage = () => {
   const handleStatusFilterChange = (status) => setSelectedStatus(status);
   const handleDateFilterChange = (date) => setSelectedDate(date);
 
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchOrders();
+    } catch (error) {
+      console.error('Error refreshing orders:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
-
     const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
-
-    const isUserMatch = order.issuePlace === user.name;
-    
+    const isUserMatch = order.issuePlace === user.name || order.issuePlace === user.username
     const facilityMatch = order.facilityType?.code === facilityCode;
-
     const searchMatch =
       searchText.trim() === '' ||
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase());
-
     const statusMatch = selectedStatus ? order.label === selectedStatus : true;
     const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
 
@@ -83,7 +90,7 @@ const AcceptedOrderPage = () => {
           onPress={() => setModalVisible(true)}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="tune" size={20} color="#A34025" />
+          <MaterialIcons name="tune" size={20} color="#1F509A" />
         </TouchableOpacity>
       </View>
 
@@ -92,14 +99,36 @@ const AcceptedOrderPage = () => {
         data={filteredOrders}
         renderItem={({ item }) => <OrderListItem orderItem={item} modalType="accepted" />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
-
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#1F509A']}
+            tintColor="#1F509A"
+          />
+        }
+        contentContainerStyle={{ paddingBottom: 80 }}
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Không có đơn hàng</Text>
+            {loading ? (
+              <>
+                <ActivityIndicator size="large" color="#1F509A" />
+                <Text style={styles.loadingText}>Đang tải...</Text>
+              </>
+            ) : (
+              <Text style={styles.emptyText}>Không có đơn hàng</Text>
+            )}
           </View>
         )}
       />
 
+      {/* Initial loading overlay */}
+      {loading && orders.length === 0 && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#1F509A" />
+          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+        </View>
+      )}
 
       <ModalFilter
         visible={modalVisible}
@@ -142,25 +171,40 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 8,
-    borderColor: '#ccc',
+    borderColor: '#0A3981',
     borderWidth: 1,
   },
   FILTER_BUTTON: {
     marginLeft: 8,
     padding: 8,
-    backgroundColor: '#FFECE8',
+    backgroundColor: '#D4EBF8',
     borderRadius: 8,
   },
-    emptyContainer: {
+  emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 50,
   },
-    emptyText: {
+  emptyText: {
     fontSize: 16,
     color: "#888",
     fontWeight: "500",
   },
-
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(247, 246, 246, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
+  },
 });

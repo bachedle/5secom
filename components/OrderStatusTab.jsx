@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#0A3981',
   },
   grid: {
     flexDirection: 'row',
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   card: {
-    backgroundColor: '#E16A54',
+    backgroundColor: '#D4EBF8',
     borderRadius: 16,
     width: '48%',        
     height: 120,         
@@ -78,14 +79,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   label: {
-    fontSize: 25,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#0A3981',
     textAlign: 'center',
   },
   count: {
-    fontSize: 25,
-    color: '#fff',
+    fontSize: 28,
+    color: '#0A3981',
     fontWeight: 'bold',
   },
 });

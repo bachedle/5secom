@@ -51,7 +51,15 @@ export const getOrders = async (token) => {
 
 // GET order by ID
 export const getOrderByID = async (id) => {
-    const res = await axios.get(`${API_URL}/facility/${id}`);
+    const token = await SecureStore.getItemAsync('authToken');
+    const res = await axios.get(`${API_URL}/facility/${id}`, {
+      headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    });
+    
     return res.data;
 };
 

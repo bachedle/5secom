@@ -1,3 +1,4 @@
+
 import {
   StyleSheet,
   Text,
@@ -25,8 +26,8 @@ import { uploadFile } from "../../api/file";
 
 const API_URL = "https://5secom.dientoan.vn/api";
 
-const AddOrderInfo = () => {
-  const { draftOrder, updateDraftPath, submitDraft } = useOrder();
+const EditOrderInfo = () => {
+  const { draftOrder, updateDraftPath, submitDraft, editMode } = useOrder();
   const router = useRouter();
 
   const [skuOptions, setSkuOptions] = useState([]);
@@ -43,7 +44,7 @@ const AddOrderInfo = () => {
   const handleSave = async () => {
     try {
       await submitDraft();
-      Alert.alert("Thành công", "Đơn hàng đã được tạo!");
+      Alert.alert("Thành công", "Đơn hàng đã được cập nhật!");
       router.replace("/ProductList");
     } catch (e) {
       console.error(e);
@@ -221,9 +222,11 @@ const AddOrderInfo = () => {
   return (
     <SafeAreaView style={styles.container}>
       {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Tạo Đơn</Text>
-      </View>
+        <View style={styles.header}>
+            <Text style={styles.headerText}>
+                {editMode ? "Chỉnh sửa Đơn" : "Tạo Đơn"}
+            </Text>
+        </View>
 
       {/* CONTENT */}
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -372,7 +375,7 @@ const AddOrderInfo = () => {
   );
 };
 
-export default AddOrderInfo;
+export default EditOrderInfo;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f9f9f9" },

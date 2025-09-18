@@ -10,6 +10,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useState, useEffect, useContext } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -19,7 +20,6 @@ import OrderListItem from '../../../components/OrderListItem';
 import ModalFilter from '../../../components/modalFilter';
 import { AuthContext } from '../../../utils/authContext';
 import { OrderContext } from '../../../utils/orderContext';
-import * as SecureStore from 'expo-secure-store';
 
 const ProductListPage = () => {
   const router = useRouter();
@@ -28,15 +28,14 @@ const ProductListPage = () => {
 
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { 
     orders, 
     loading, 
     fetchOrders, 
-    hasMore, 
     loadingMore, 
   } = useContext(OrderContext);
 
@@ -47,9 +46,20 @@ const ProductListPage = () => {
     return user?.role?.name?.toLowerCase() === 'quản trị hệ thống'
   };
 
-  const filteredOrders = orders.filter(order => {
-    const isUnassigned = order.issuePlace === 'unassigned' || order.issuePlace === null;
+  // Handle pull-to-refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchOrders();
+    } catch (error) {
+      console.error('Error refreshing orders:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
+  const filteredOrders = orders.filter(order => {
+    const isUnassigned = order.issuePlace === 'unassigned';
     const searchMatch =
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
@@ -70,42 +80,41 @@ const ProductListPage = () => {
     });
   };
 
-  // Handle pull-to-refresh
-  const handleRefresh = () => {
-    fetchOrders(true); // Pass true to indicate refresh
-  };
-
-  // Handle infinite scroll
-  const handleLoadMore = () => {
-    if (hasMore && !loadingMore) {
-      loadMoreOrders();
-    }
-  };
-
   // Render footer for loading indicator
   const renderFooter = () => {
     if (!loadingMore) return null;
     
     return (
       <View style={styles.loadingFooter}>
-        <ActivityIndicator size="small" color="#E8775D" />
+        <ActivityIndicator size="small" color="#1F509A" />
         <Text style={styles.loadingText}>Đang tải thêm...</Text>
       </View>
     );
   };
 
-    // 🔒 restrict page
+  // 🔒 restrict page
   if (!isAdmin()) {
     return (
       <AccessDenied />
     );
   }
+
   return (
     <View style={styles.CONTAINER}>
       {/* Header */}
       <View style={styles.HEADER}>
         <Text style={styles.HEADER_TITLE}>Danh sách đơn</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={handleRefresh}
+          disabled={refreshing}
+        >
+          <MaterialIcons 
+            name="refresh" 
+            size={24} 
+            color={refreshing ? "#ccc" : "#1F509A"} 
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Status Tabs */}
@@ -131,7 +140,7 @@ const ProductListPage = () => {
           onPress={() => setModalVisible(true)}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="tune" size={20} color="#A34025" />
+          <MaterialIcons name="tune" size={20} color="#1F509A" />
         </TouchableOpacity>
       </View>
 
@@ -145,15 +154,25 @@ const ProductListPage = () => {
         facilityTypes={facilityTypes}
       />
 
-      {/* Order List with Infinite Scroll */}
+      {/* Order List with Pull-to-Refresh */}
       <FlatList
         data={filteredOrders}
         keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
-        renderItem={({ item }) => <OrderListItem orderItem={item} />}
+        renderItem={({ item }) => <OrderListItem orderItem={item} modalType='edit'/>}
         
-        // Infinite scroll
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1} // Trigger when 10% from bottom
+        // Pull-to-refresh
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#1F509A']}
+            tintColor="#1F509A"
+            title="Kéo để làm mới..."
+            titleColor="#666"
+          />
+        }
+        
+        // Footer for additional loading
         ListFooterComponent={renderFooter}
         
         // Styling
@@ -161,20 +180,25 @@ const ProductListPage = () => {
         showsVerticalScrollIndicator={false}
         
         // Empty state
-        ListEmptyComponent={
-          !loading && (
-            <View style={styles.emptyContainer}>
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            {loading ? (
+              <>
+                <ActivityIndicator size="large" color="#1F509A" />
+                <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+              </>
+            ) : (
               <Text style={styles.emptyText}>Không có đơn nào</Text>
-            </View>
-          )
-        }
+            )}
+          </View>
+        )}
       />
 
       {/* Initial loading overlay */}
       {loading && orders.length === 0 && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#E8775D" />
-          <Text style={styles.loadingText}>Đang tải...</Text>
+          <ActivityIndicator size="large" color="#1F509A" />
+          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
         </View>
       )}
     </View>
@@ -191,19 +215,26 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   HEADER: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
   },
   HEADER_TITLE: {
     fontSize: 20,
     fontWeight: 'bold',
+    flex: 1,
     textAlign: 'center'
+  },
+  refreshButton: {
+    padding: 4,
   },
   STATUS_TABS: {
     flexDirection: 'row',
     marginBottom: 12,
   },
   ACTIVE_TAB: {
-    backgroundColor: '#E8775D',
+    backgroundColor: '#0A3981',
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
@@ -228,13 +259,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 8,
-    borderColor: '#ccc',
+    borderColor: '#0A3981',
     borderWidth: 1,
   },
   FILTER_BUTTON: {
     marginLeft: 8,
     padding: 8,
-    backgroundColor: '#FFECE8',
+    backgroundColor: '#D4EBF8',
     borderRadius: 8,
   },
   
@@ -257,6 +288,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#666',
     fontSize: 14,
+    fontWeight: '500',
   },
   
   // Empty state
