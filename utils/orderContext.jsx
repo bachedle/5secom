@@ -68,6 +68,10 @@ export const OrderProvider = ({ children }) => {
   const [hasMore, setHasMore] = useState(true); 
   const [loadingMore, setLoadingMore] = useState(false);
 
+    // Edit mode states
+  const [editMode, setEditMode] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState(null);
+
   // Facilities state
   const [facilities, setFacilities] = useState([]);
   const [loadingFacilities, setLoadingFacilities] = useState(false);

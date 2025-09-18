@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import ModalTest from '../components/modalTest';
+import ModalEdit from '../components/modalEdit';
 import ModalAccepted from '../components/modalAccepted';
 import { formatNumber } from '../utils/numberFormat';
 
@@ -97,7 +98,13 @@ const OrderListItem = ({ orderItem, modalType = 'receive' }) => {
       </TouchableOpacity>
 
       {/* Correct modal */}
-      {modalType === 'receive' ? (
+      {modalType === 'edit' ? (
+        <ModalEdit
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          orderItem={orderItem}
+        />
+      ) : modalType === 'receive' ?  ( 
         <ModalTest
           visible={modalVisible}
           onClose={() => setModalVisible(false)}

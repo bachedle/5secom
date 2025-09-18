@@ -12,7 +12,7 @@ import {
   TouchableWithoutFeedback,
   Switch,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
@@ -23,6 +23,8 @@ const API_URL = "https://5secom.dientoan.vn/api";
 
 
 const AddStoreInfo = () => {
+    const params = useLocalSearchParams();
+
 
   const { draftOrder, updateDraftPath } = useOrder();  
 
@@ -40,6 +42,19 @@ const AddStoreInfo = () => {
   const sku = draftOrder.code || "";  
   const orderId = draftOrder.idNumber || "";    
   const isPriority = draftOrder.isPriority || false;
+
+    // Check if this is edit mode from URL params
+  useEffect(() => {
+    const editId = params.editId;
+    if (editId && !editMode) {
+      // Load order for editing
+      loadOrderForEdit(editId).catch(error => {
+        console.error("Failed to load order for editing:", error);
+        Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng để chỉnh sửa");
+        router.back();
+      });
+    }
+  }, [params.editId, editMode, loadOrderForEdit]);
 
 
   const handleBack = () => router.back();

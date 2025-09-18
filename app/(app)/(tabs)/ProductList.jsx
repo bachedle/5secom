@@ -147,7 +147,7 @@ const ProductListPage = () => {
       <FlatList
         data={filteredOrders}
         keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
-        renderItem={({ item }) => <OrderListItem orderItem={item} />}
+        renderItem={({ item }) => <OrderListItem orderItem={item} modalType='edit'/>}
         
         // // Infinite scroll
         // onEndReached={handleLoadMore}
