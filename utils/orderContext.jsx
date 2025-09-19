@@ -66,7 +66,7 @@ const cleanOrder = (draft) => {
 };
 
 export const OrderProvider = ({ children }) => {
-  // 🔹 Separate states
+  // Separate states
   const [orders, setOrders] = useState([]);      // paginated list
   const [allOrders, setAllOrders] = useState([]); // full dataset
 
@@ -103,7 +103,7 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Fetch paginated orders
+  // Fetch paginated orders
   const fetchOrders = async () => {
     try {
       const token = await SecureStore.getItemAsync("authToken");
@@ -130,7 +130,7 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Load more orders (infinite scroll)
+  // Load more orders (infinite scroll)
   const loadMoreOrders = async () => {
     if (loadingMore || !hasMore) return;
 
@@ -159,7 +159,7 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Fetch ALL orders (separate state)
+  // Fetch ALL orders (separate state)
   const fetchAllOrders = async () => {
     try {
       const token = await SecureStore.getItemAsync("authToken");
@@ -183,7 +183,7 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  // --- Other CRUD operations (unchanged) ---
+  // Create new order
   const addOrder = async (newOrder) => {
     try {
       const token = await SecureStore.getItemAsync("authToken");
@@ -199,7 +199,8 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  const editOrder = async (id, updates) => {
+  // Update existing order (renamed for clarity)
+  const updateOrderAPI = async (id, updates) => {
     try {
       const token = await SecureStore.getItemAsync("authToken");
       if (!token) throw new Error("Not authenticated");
@@ -213,6 +214,7 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
+  // Load order for editing
   const loadOrderForEdit = async (id) => {
     try {
       const token = await SecureStore.getItemAsync("authToken");
@@ -224,6 +226,43 @@ export const OrderProvider = ({ children }) => {
       setEditingOrderId(id);
     } catch (error) {
       console.error("Error loading order for edit:", error);
+      throw error;
+    }
+  };
+
+  // Main function to start edit mode
+  const editOrder = async (id) => {
+    await loadOrderForEdit(id);
+  };
+
+  // Submit draft (handles both create and update)
+  const submitDraft = async () => {
+    try {
+      const cleanedDraft = cleanOrder(draftOrder);
+      
+      if (editMode && editingOrderId) {
+        // Edit existing order
+        const orderToUpdate = {
+          ...cleanedDraft,
+          id: editingOrderId,
+          version: draftOrder.version || 0
+        };
+        const result = await updateOrderAPI(editingOrderId, orderToUpdate);
+        
+        // Reset edit mode after successful update
+        setEditMode(false);
+        setEditingOrderId(null);
+        await resetDraft();
+        
+        return result;
+      } else {
+        // Create new order
+        const result = await addOrder(cleanedDraft);
+        return result;
+      }
+    } catch (error) {
+      console.error("Error in submitDraft:", error);
+      throw error;
     }
   };
 
@@ -235,6 +274,8 @@ export const OrderProvider = ({ children }) => {
 
   const resetDraft = async () => {
     setDraftOrder(initialDraft);
+    setEditMode(false);
+    setEditingOrderId(null);
     try {
       await SecureStore.deleteItemAsync("orderDraft");
     } catch (error) {
@@ -242,7 +283,7 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  // Draft autosave/load (unchanged)
+  // Draft autosave/load
   useEffect(() => {
     const loadDraft = async () => {
       try {
@@ -272,7 +313,7 @@ export const OrderProvider = ({ children }) => {
     fetchFacilities();
   }, []);
 
-  // 🔹 Final provided context value
+  // Final provided context value
   const value = useMemo(
     () => ({
       orders,        // paginated list
@@ -285,7 +326,9 @@ export const OrderProvider = ({ children }) => {
       loadMoreOrders,
       totalOrders,
       addOrder,
-      editOrder,
+      editOrder,           // For starting edit mode
+      updateOrderAPI,      // For API calls
+      submitDraft,         // NEW: handles create/update logic
       draftOrder,
       updateDraft,
       updateDraftPath,

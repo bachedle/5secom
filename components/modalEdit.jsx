@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useRouter } from 'expo-router';
 import { useOrder } from "../utils/orderContext";
@@ -16,13 +17,31 @@ import { useOrder } from "../utils/orderContext";
 const ModalEditAction = ({ visible, onClose, orderItem }) => {
   const router = useRouter();
   const { editOrder } = useOrder();
-    const [showFullImage, setShowFullImage] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
+  const [loading, setLoading] = useState(false);
   
 
-  const handleEdit = () => {
-    onClose(); // Close modal first
-    // Navigate to edit flow
-    router.push(`/EditStoreInfo?editId=${orderItem?.id}`);
+  const handleEdit = async () => {
+    if (!orderItem?.id) {
+      Alert.alert("Lỗi", "Không tìm thấy ID đơn hàng");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      onClose(); // Close modal first
+      
+      // Load order data into edit mode
+      await editOrder(orderItem.id);
+      
+      // Navigate to edit flow
+      router.push('/EditStoreInfo');
+    } catch (error) {
+      console.error("Error starting edit:", error);
+      Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,7 +117,6 @@ const ModalEditAction = ({ visible, onClose, orderItem }) => {
               </Text>
             </View>
 
-
             {/* Thumbnail */}
             <Text style={styles.label}>Hình Ảnh:</Text>
             <View style={styles.imagePlaceholder}>
@@ -118,6 +136,7 @@ const ModalEditAction = ({ visible, onClose, orderItem }) => {
                 </Text>
             )}
             </View>
+            
             {/* Action Buttons */}
             <View style={styles.buttonRow}>
               <Pressable
@@ -128,28 +147,32 @@ const ModalEditAction = ({ visible, onClose, orderItem }) => {
               </Pressable>
               
               <Pressable
-                style={styles.editButton}
+                style={[styles.editButton, loading && styles.disabledButton]}
                 onPress={handleEdit}
+                disabled={loading}
               >
-                <Text style={styles.editButtonText}>Chỉnh sửa đơn</Text>
+                <Text style={styles.editButtonText}>
+                  {loading ? "Đang tải..." : "Chỉnh sửa đơn"}
+                </Text>
               </Pressable>
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
       </KeyboardAvoidingView>
+      
       {/* Full Image Modal */}
-        <Modal visible={showFullImage} transparent animationType="fade">
-            <TouchableOpacity
-            style={styles.fullImageOverlay}
-            onPress={() => setShowFullImage(false)}
-            >
-            <Image
-                source={{ uri: orderItem?.sampleSource }}
-                style={styles.fullImage}
-                resizeMode="contain"
-            />
-            </TouchableOpacity>
-        </Modal>
+      <Modal visible={showFullImage} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.fullImageOverlay}
+          onPress={() => setShowFullImage(false)}
+        >
+          <Image
+            source={{ uri: orderItem?.sampleSource }}
+            style={styles.fullImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </Modal>
     </Modal>
     
   );
@@ -205,6 +228,12 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 3,
   },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
   buttonRow: {
     flexDirection: "row",
     gap: 12,
@@ -221,6 +250,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
+  disabledButton: {
+    backgroundColor: "#ccc",
+  },
   cancelButton: {
     backgroundColor: "white",
     borderWidth: 1.5,
@@ -235,7 +267,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
-    imagePlaceholder: {
+  imagePlaceholder: {
     width: "100%",
     height: 120,
     backgroundColor: "#ccc",

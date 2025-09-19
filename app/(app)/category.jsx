@@ -95,7 +95,7 @@ const ManufacturingListPage = () => {
     return isAssigned && isUserMatch && facilityMatch;  
   });
 
-  const filteredOrders = allOrders.filter(order => {
+  const filteredOrders = orders.filter(order => {
     const isUnassigned = order.issuePlace === 'unassigned' || order.issuePlace === null;
     const searchMatch =
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
@@ -118,6 +118,10 @@ const ManufacturingListPage = () => {
       </View>
     );
   };
+
+  useEffect(() => {
+  console.log("Order IDs:", orders.map(o => o.id));
+}, [orders]);
 
   return (
     <View style={styles.CONTAINER}>
