@@ -36,7 +36,9 @@ const ProductListPage = () => {
     orders, 
     loading, 
     fetchOrders, 
-    loadingMore, 
+    loadMoreOrders,
+    loadingMore,
+    hasMore,
   } = useContext(OrderContext);
 
   const handleStatusFilterChange = (status) => setSelectedStatus(status);
@@ -55,6 +57,13 @@ const ProductListPage = () => {
       console.error('Error refreshing orders:', error);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  // Handle end reached for infinite scrolling
+  const handleEndReached = () => {
+    if (hasMore && !loadingMore) {
+      loadMoreOrders();
     }
   };
 
@@ -154,7 +163,7 @@ const ProductListPage = () => {
         facilityTypes={facilityTypes}
       />
 
-      {/* Order List with Pull-to-Refresh */}
+      {/* Order List with Pull-to-Refresh and Infinite Scrolling */}
       <FlatList
         data={filteredOrders}
         keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
@@ -172,7 +181,11 @@ const ProductListPage = () => {
           />
         }
         
-        // Footer for additional loading
+        // Infinite scrolling
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        
+        // Footer for loading more
         ListFooterComponent={renderFooter}
         
         // Styling
@@ -192,6 +205,13 @@ const ProductListPage = () => {
             )}
           </View>
         )}
+        
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={20}
+        windowSize={10}
       />
 
       {/* Initial loading overlay */}

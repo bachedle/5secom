@@ -1,11 +1,12 @@
 // context/OrderContext.js
 import {
   getOrders,
+  getAllOrders,
   getOrderByID,
   createOrder,
   updateOrder,
   getFacilities,
-} from "../api/order"; // ✅ reuse API helpers
+} from "../api/order";
 import React, {
   createContext,
   useState,
@@ -65,11 +66,15 @@ const cleanOrder = (draft) => {
 };
 
 export const OrderProvider = ({ children }) => {
-  const [orders, setOrders] = useState([]);
+  // 🔹 Separate states
+  const [orders, setOrders] = useState([]);      // paginated list
+  const [allOrders, setAllOrders] = useState([]); // full dataset
+
   const [totalOrders, setTotalOrders] = useState(0);
   const [loading, setLoading] = useState(false);
   const [draftOrder, setDraftOrder] = useState(initialDraft);
 
+  // Infinite scrolling states
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -98,38 +103,94 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  // Fetch orders
+  // 🔹 Fetch paginated orders
   const fetchOrders = async () => {
     try {
       const token = await SecureStore.getItemAsync("authToken");
       if (!token) return;
+
       setLoading(true);
-
-      const data = await getOrders(token); // ✅ reuse order.js
-      const allOrders = data?.content || [];
-
-      allOrders.sort(
-        (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
-      );
-
-      setOrders(allOrders);
-      setTotalOrders(data?.totalElements || allOrders.length);
       setPage(0);
+
+      const data = await getOrders(token, 0, 20);
+      const newOrders = data?.content || [];
+
+      newOrders.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+
+      setOrders(newOrders);
+      setTotalOrders(data?.totalElements || newOrders.length);
+      setHasMore(!data?.last && newOrders.length > 0);
+      setPage(1); // next page
     } catch (err) {
       console.error("Error fetching orders:", err);
       setOrders([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
   };
 
+  // 🔹 Load more orders (infinite scroll)
+  const loadMoreOrders = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (!token) return;
+
+      setLoadingMore(true);
+
+      const data = await getOrders(token, page, 20);
+      const newOrders = data?.content || [];
+
+      if (newOrders.length > 0) {
+        newOrders.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+        setOrders((prev) => [...prev, ...newOrders]);
+        setPage((prev) => prev + 1);
+        setHasMore(!data?.last);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Error loading more orders:", err);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // 🔹 Fetch ALL orders (separate state)
+  const fetchAllOrders = async () => {
+    try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (!token) return;
+
+      setLoading(true);
+
+      const data = await getAllOrders(token);
+      const everything = data?.content || [];
+
+      everything.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+
+      setAllOrders(everything);
+      setTotalOrders(data?.totalElements || everything.length);
+
+    } catch (err) {
+      console.error("Error fetching all orders:", err);
+      setAllOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Other CRUD operations (unchanged) ---
   const addOrder = async (newOrder) => {
     try {
       const token = await SecureStore.getItemAsync("authToken");
       if (!token) throw new Error("Not authenticated");
 
-      const created = await createOrder(newOrder, token); // ✅ reuse order.js
-      await fetchOrders();
+      const created = await createOrder(newOrder, token);
+      await fetchOrders(); // refresh
       await resetDraft();
       return created;
     } catch (error) {
@@ -138,48 +199,33 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-const editOrder = async (id, updates) => {
-  try {
-    const token = await SecureStore.getItemAsync("authToken");
-    if (!token) throw new Error("Not authenticated");
+  const editOrder = async (id, updates) => {
+    try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (!token) throw new Error("Not authenticated");
 
-    const updated = await updateOrder(id, updates, token);
-    
-    // Remove this line - let fetchOrders handle the update
-    // setOrders((prev) => prev.map((order) => (order.id === id ? updated : order)));
-    
-    await fetchOrders(); // This will get the latest data from API
-    return updated;
-  } catch (error) {
-    console.error("Error updating order:", error);
-    throw error;
-  }
-};
-
-const submitDraft = async () => {
-  if (draftOrder.id) {
-    // editing an existing order
-    return await updateOrder(draftOrder);
-  } else {
-    // creating new order
-    return await createOrder(draftOrder);
-  }
-};
-
+      const updated = await updateOrder(id, updates, token);
+      await fetchOrders();
+      return updated;
+    } catch (error) {
+      console.error("Error updating order:", error);
+      throw error;
+    }
+  };
 
   const loadOrderForEdit = async (id) => {
-  try {
-    const token = await SecureStore.getItemAsync("authToken");
-    if (!token) throw new Error("Not authenticated");
+    try {
+      const token = await SecureStore.getItemAsync("authToken");
+      if (!token) throw new Error("Not authenticated");
 
-    const order = await getOrderByID(id, token);
-    setDraftOrder(order);
-    setEditMode(true);
-    setEditingOrderId(id);
-  } catch (error) {
-    console.error("Error loading order for edit:", error);
-  }
-};
+      const order = await getOrderByID(id, token);
+      setDraftOrder(order);
+      setEditMode(true);
+      setEditingOrderId(id);
+    } catch (error) {
+      console.error("Error loading order for edit:", error);
+    }
+  };
 
   const updateDraft = (partial) =>
     setDraftOrder((prev) => ({ ...prev, ...partial }));
@@ -196,7 +242,7 @@ const submitDraft = async () => {
     }
   };
 
-  // Load saved draft on mount
+  // Draft autosave/load (unchanged)
   useEffect(() => {
     const loadDraft = async () => {
       try {
@@ -209,7 +255,6 @@ const submitDraft = async () => {
     loadDraft();
   }, []);
 
-  // Auto-save draft
   useEffect(() => {
     const saveDraft = async () => {
       try {
@@ -221,18 +266,23 @@ const submitDraft = async () => {
     saveDraft();
   }, [draftOrder]);
 
-  // Initial load
+  // Initial load → paginated fetch by default
   useEffect(() => {
     fetchOrders();
     fetchFacilities();
   }, []);
 
+  // 🔹 Final provided context value
   const value = useMemo(
     () => ({
-      orders,
+      orders,        // paginated list
+      allOrders,     // full dataset
       setOrders,
+      setAllOrders,
       loading,
       fetchOrders,
+      fetchAllOrders,
+      loadMoreOrders,
       totalOrders,
       addOrder,
       editOrder,
@@ -240,7 +290,6 @@ const submitDraft = async () => {
       updateDraft,
       updateDraftPath,
       resetDraft,
-      submitDraft,
       draft: draftOrder,
       setDraft: setDraftOrder,
       page,
@@ -257,7 +306,11 @@ const submitDraft = async () => {
     }),
     [
       orders,
+      allOrders,
       loading,
+      loadingMore,
+      hasMore,
+      page,
       draftOrder,
       facilities,
       loadingFacilities,
