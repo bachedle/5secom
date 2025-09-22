@@ -127,7 +127,7 @@ const UserPassword = () => {
               <MaterialCommunityIcons 
                 name="lock-outline" 
                 size={80} 
-                color="#dd6b4d" 
+                color="#1F509A" 
               />
             </View>
 
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#dd6b4d',
+    borderColor: '#1F509A',
     borderRadius: 8,
     marginVertical: 4,
   },
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     color: '#28a745',
   },
   confirmButton: {
-    backgroundColor: '#dd6b4d',
+    backgroundColor: '#1F509A',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#fff',
-    borderColor: '#dd6b4d',
+    borderColor: '#1F509A',
     borderWidth: 2,
     paddingVertical: 12,
     borderRadius: 8,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   cancelText: {
-    color: '#dd6b4d',
+    color: '#1F509A',
     fontSize: 16,
     fontWeight: 'bold',
   },

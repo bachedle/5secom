@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
 
   dateText: {
-    backgroundColor: '#F0B5AA',
+    backgroundColor: '#D4EBF8',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,

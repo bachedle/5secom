@@ -113,17 +113,7 @@ const ProductListPage = () => {
       {/* Header */}
       <View style={styles.HEADER}>
         <Text style={styles.HEADER_TITLE}>Danh sách đơn</Text>
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={handleRefresh}
-          disabled={refreshing}
-        >
-          <MaterialIcons 
-            name="refresh" 
-            size={24} 
-            color={refreshing ? "#ccc" : "#1F509A"} 
-          />
-        </TouchableOpacity>
+
       </View>
 
       {/* Status Tabs */}
