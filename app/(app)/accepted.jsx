@@ -32,7 +32,7 @@ const AcceptedOrderPage = () => {
   const { user } = useAuth();
 
   const { label, facilityCode } = useLocalSearchParams();
-  const { orders, loading, fetchOrders } = useContext(OrderContext);
+  const { orders, allOrders, loading, fetchOrders, fetchAllOrders } = useContext(OrderContext);
 
   const handleBack = () => {
     router.dismiss();
@@ -45,7 +45,7 @@ const AcceptedOrderPage = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetchOrders();
+      await fetchAllOrders();
     } catch (error) {
       console.error('Error refreshing orders:', error);
     } finally {
@@ -53,7 +53,7 @@ const AcceptedOrderPage = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = allOrders.filter(order => {
     const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
     const isUserMatch = order.issuePlace === user.name || order.issuePlace === user.username
     const facilityMatch = order.facilityType?.code === facilityCode;

@@ -36,7 +36,9 @@ const ProductListPage = () => {
     orders, 
     loading, 
     fetchOrders, 
-    loadingMore, 
+    loadMoreOrders,
+    loadingMore,
+    hasMore,
   } = useContext(OrderContext);
 
   const handleStatusFilterChange = (status) => setSelectedStatus(status);
@@ -58,8 +60,15 @@ const ProductListPage = () => {
     }
   };
 
+  // Handle end reached for infinite scrolling
+  const handleEndReached = () => {
+    if (hasMore && !loadingMore) {
+      loadMoreOrders();
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
-    const isUnassigned = order.issuePlace === 'unassigned';
+    const isUnassigned = order.issuePlace === 'unassigned' || order.issuePlace === null ;
     const searchMatch =
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
@@ -104,17 +113,7 @@ const ProductListPage = () => {
       {/* Header */}
       <View style={styles.HEADER}>
         <Text style={styles.HEADER_TITLE}>Danh sách đơn</Text>
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={handleRefresh}
-          disabled={refreshing}
-        >
-          <MaterialIcons 
-            name="refresh" 
-            size={24} 
-            color={refreshing ? "#ccc" : "#1F509A"} 
-          />
-        </TouchableOpacity>
+
       </View>
 
       {/* Status Tabs */}
@@ -154,7 +153,7 @@ const ProductListPage = () => {
         facilityTypes={facilityTypes}
       />
 
-      {/* Order List with Pull-to-Refresh */}
+      {/* Order List with Pull-to-Refresh and Infinite Scrolling */}
       <FlatList
         data={filteredOrders}
         keyExtractor={(item, index) => `${item.id || item.code}-${index}`}
@@ -172,7 +171,11 @@ const ProductListPage = () => {
           />
         }
         
-        // Footer for additional loading
+        // Infinite scrolling
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        
+        // Footer for loading more
         ListFooterComponent={renderFooter}
         
         // Styling
@@ -192,6 +195,13 @@ const ProductListPage = () => {
             )}
           </View>
         )}
+        
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={20}
+        windowSize={10}
       />
 
       {/* Initial loading overlay */}

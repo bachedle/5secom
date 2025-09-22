@@ -25,7 +25,16 @@ const ManufacturingListPage = () => {
   const { label, facilityCode } = useLocalSearchParams();
   const router = useRouter();
 
-  const { orders, loading, fetchOrders } = useContext(OrderContext);
+  const { 
+    orders, 
+    loading, 
+    fetchOrders, 
+    allOrders,
+    loadMoreOrders,
+    loadingMore,
+    hasMore,
+  } = useContext(OrderContext);
+  
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -72,9 +81,16 @@ const ManufacturingListPage = () => {
     }
   };
 
-  const acceptedOrder = orders.filter((order) => {
+  // Handle end reached for infinite scrolling
+  const handleEndReached = () => {
+    if (hasMore && !loadingMore) {
+      loadMoreOrders();
+    }
+  };
+
+  const acceptedOrder = allOrders.filter((order) => {
     const isAssigned = order.issuePlace !== 'unassigned' && order.issuePlace !== null && order.issuePlace !== "";
-    const isUserMatch = order.issuePlace === user.name;
+    const isUserMatch = order.issuePlace === user.name || order.issuePlace === user.username ;
     const facilityMatch = order.facilityType?.code === facilityCode;
     return isAssigned && isUserMatch && facilityMatch;  
   });
@@ -90,6 +106,22 @@ const ManufacturingListPage = () => {
     const facilityMatch = order.facilityType?.code === facilityCode;
     return searchMatch && statusMatch && dateMatch && isUnassigned && facilityMatch;
   });
+
+  // Render footer for loading indicator
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    
+    return (
+      <View style={styles.loadingFooter}>
+        <ActivityIndicator size="small" color="#1F509A" />
+        <Text style={styles.loadingText}>Đang tải thêm...</Text>
+      </View>
+    );
+  };
+
+  useEffect(() => {
+  console.log("Order IDs:", orders.map(o => o.id));
+}, [orders]);
 
   return (
     <View style={styles.CONTAINER}>
@@ -187,12 +219,13 @@ const ManufacturingListPage = () => {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Order List */}
+      {/* Order List with Infinite Scrolling */}
       <FlatList
         data={filteredOrders}
         renderItem={({ item }) => <OrderListItem orderItem={item} />}
         keyExtractor={(item, index) => item.id?.toString() || index.toString()}
-        contentContainerStyle={styles.CARDS_WRAPPER}
+        
+        // Pull to refresh
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -201,6 +234,19 @@ const ManufacturingListPage = () => {
             tintColor="#1F509A"
           />
         }
+        
+        // Infinite scrolling
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        
+        // Footer for loading more
+        ListFooterComponent={renderFooter}
+        
+        // Styling
+        contentContainerStyle={styles.CARDS_WRAPPER}
+        showsVerticalScrollIndicator={false}
+        
+        // Empty state
         ListEmptyComponent={() => (
           <View style={styles.emptyContainer}>
             {loading ? (
@@ -213,6 +259,13 @@ const ManufacturingListPage = () => {
             )}
           </View>
         )}
+        
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={20}
+        windowSize={10}
       />
 
       {/* Initial loading overlay */}
@@ -391,10 +444,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingFooter: {
+    padding: 20,
+    alignItems: 'center',
+  },
   loadingText: {
     marginTop: 8,
     color: '#666',
     fontSize: 14,
     fontWeight: '500',
   },
-});
+})

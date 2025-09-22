@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useRouter } from 'expo-router';
 import { useOrder } from "../utils/orderContext";
@@ -16,13 +17,31 @@ import { useOrder } from "../utils/orderContext";
 const ModalEditAction = ({ visible, onClose, orderItem }) => {
   const router = useRouter();
   const { editOrder } = useOrder();
-    const [showFullImage, setShowFullImage] = useState(false);
+  const [showFullImage, setShowFullImage] = useState(false);
+  const [loading, setLoading] = useState(false);
   
 
-  const handleEdit = () => {
-    onClose(); // Close modal first
-    // Navigate to edit flow
-    router.push(`/EditStoreInfo?editId=${orderItem?.id}`);
+  const handleEdit = async () => {
+    if (!orderItem?.id) {
+      Alert.alert("Lỗi", "Không tìm thấy ID đơn hàng");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      onClose(); // Close modal first
+      
+      // Load order data into edit mode
+      await editOrder(orderItem.id);
+      
+      // Navigate to edit flow
+      router.push('/EditStoreInfo');
+    } catch (error) {
+      console.error("Error starting edit:", error);
+      Alert.alert("Lỗi", "Không thể tải thông tin đơn hàng");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,7 +75,7 @@ const ModalEditAction = ({ visible, onClose, orderItem }) => {
               </Pressable>
             </View>
 
-            {/* Order Info - Full Details */}
+            {/* Order Info - Full Details (Standardized) */}
             <View style={styles.orderInfo}>
               <Text style={styles.orderCode}>
                 Đơn hàng: {orderItem?.idNumber || '---'}
@@ -98,58 +117,62 @@ const ModalEditAction = ({ visible, onClose, orderItem }) => {
               </Text>
             </View>
 
-
             {/* Thumbnail */}
             <Text style={styles.label}>Hình Ảnh:</Text>
             <View style={styles.imagePlaceholder}>
-            {orderItem?.sampleSource ? (
+              {orderItem?.sampleSource ? (
                 <TouchableOpacity onPress={() => setShowFullImage(true)}>
-                <Image
+                  <Image
                     source={{ uri: orderItem.sampleSource }}
                     style={{ width: "100%", height: "100%", borderRadius: 6 }}
                     resizeMode="cover"
-                />
+                  />
                 </TouchableOpacity>
-            ) : (
+              ) : (
                 <Text
-                style={{ color: "#666", textAlign: "center", marginTop: 40 }}
+                  style={{ color: "#666", textAlign: "center", marginTop: 40 }}
                 >
-                Chưa có hình
+                  Chưa có hình
                 </Text>
-            )}
+              )}
             </View>
+            
             {/* Action Buttons */}
             <View style={styles.buttonRow}>
               <Pressable
-                style={styles.cancelButton}
+                style={[styles.outlinedButton, styles.buttonSpacing]}
                 onPress={onClose}
               >
-                <Text style={styles.cancelButtonText}>Quay lại</Text>
+                <Text style={styles.outlinedText}>Quay lại</Text>
               </Pressable>
               
               <Pressable
-                style={styles.editButton}
+                style={[styles.filledButton, loading && styles.disabledButton]}
                 onPress={handleEdit}
+                disabled={loading}
               >
-                <Text style={styles.editButtonText}>Chỉnh sửa đơn</Text>
+                <Text style={[styles.filledText, loading && styles.disabledText]}>
+                  {loading ? "Đang tải..." : "Chỉnh sửa đơn"}
+                </Text>
               </Pressable>
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
       </KeyboardAvoidingView>
+      
       {/* Full Image Modal */}
-        <Modal visible={showFullImage} transparent animationType="fade">
-            <TouchableOpacity
-            style={styles.fullImageOverlay}
-            onPress={() => setShowFullImage(false)}
-            >
-            <Image
-                source={{ uri: orderItem?.sampleSource }}
-                style={styles.fullImage}
-                resizeMode="contain"
-            />
-            </TouchableOpacity>
-        </Modal>
+      <Modal visible={showFullImage} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.fullImageOverlay}
+          onPress={() => setShowFullImage(false)}
+        >
+          <Image
+            source={{ uri: orderItem?.sampleSource }}
+            style={styles.fullImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </Modal>
     </Modal>
     
   );
@@ -167,7 +190,7 @@ const styles = StyleSheet.create({
   },
   modalBox: {
     width: "100%",
-    maxWidth: 350,
+    maxWidth: 400,
     backgroundColor: "white",
     borderRadius: 12,
     padding: 20,
@@ -180,13 +203,11 @@ const styles = StyleSheet.create({
   },
   title: { 
     fontSize: 18, 
-    fontWeight: "bold",
-    color: "#1F509A"
+    fontWeight: "bold"
   },
   closeText: { 
     fontSize: 18, 
-    fontWeight: "bold", 
-    color: "#666"
+    fontWeight: "bold"
   },
   orderInfo: {
     backgroundColor: "#f5f5f5",
@@ -205,37 +226,51 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 3,
   },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
   buttonRow: {
     flexDirection: "row",
-    gap: 12,
+    justifyContent: "space-between",
+    marginTop: 16,
   },
-  editButton: {
-    backgroundColor: "#1F509A",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
+  buttonSpacing: {
+    marginRight: 12,
+  },
+  filledButton: {
     flex: 1,
+    backgroundColor: "#1F509A",
+    paddingVertical: 10,
+    borderRadius: 8,
   },
-  editButtonText: {
+  filledText: {
+    textAlign: "center",
     color: "white",
     fontWeight: "600",
-    fontSize: 16,
   },
-  cancelButton: {
+  disabledButton: {
+    backgroundColor: "#ccc",
+  },
+  disabledText: {
+    color: "#666",
+  },
+  outlinedButton: {
+    flex: 1,
     backgroundColor: "white",
     borderWidth: 1.5,
     borderColor: "#1F509A",
-    paddingVertical: 14,
+    paddingVertical: 10,
     borderRadius: 8,
-    alignItems: "center",
-    flex: 1,
   },
-  cancelButtonText: {
+  outlinedText: {
+    textAlign: "center",
     color: "#1F509A",
     fontWeight: "600",
-    fontSize: 16,
   },
-    imagePlaceholder: {
+  imagePlaceholder: {
     width: "100%",
     height: 120,
     backgroundColor: "#ccc",

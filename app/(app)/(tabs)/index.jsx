@@ -1,16 +1,21 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import React , { useContext, useState }from 'react';
+import React , { useContext, useEffect, useState }from 'react';
 import OrderStatusTab from '../../../components/OrderStatusTab';
 import {OrderContext} from '../../../utils/orderContext';
 import { formatNumber } from '../../../utils/numberFormat';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const HomePage = () => {
-  const { totalOrders, orders } = useContext(OrderContext);
+  const { totalOrders, allOrders, fetchAllOrders } = useContext(OrderContext);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
 
+  useEffect(() => {
+    fetchAllOrders();
+  }, [])
+  
+  
   const formattedDate = selectedDate.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
@@ -24,7 +29,7 @@ const HomePage = () => {
     );
   }
 
-  const ordersForDate = orders.filter(order => {
+  const ordersForDate = allOrders.filter(order => {
     if (!order.createdDate) return false;
     const orderDate = new Date(order.createdDate); 
     return isSameDay(orderDate, selectedDate);
@@ -108,7 +113,7 @@ const styles = StyleSheet.create({
   },
 
   dateText: {
-    backgroundColor: '#F0B5AA',
+    backgroundColor: '#D4EBF8',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
