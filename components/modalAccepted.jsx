@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   },
   inputBox: {
     borderWidth: 1.5,
-    borderColor: '#f18060',
+    borderColor: '#1F509A',
     borderRadius: 8,
     minHeight: 80,
     padding: 10,
@@ -325,18 +325,18 @@ const styles = StyleSheet.create({
   outlinedButton: {
     flex: 1,
     borderWidth: 1.5,
-    borderColor: '#f18060',
+    borderColor: '#1F509A',
     paddingVertical: 10,
     borderRadius: 8,
   },
   outlinedText: {
     textAlign: 'center',
-    color: '#f18060',
+    color: '#1F509A',
     fontWeight: '600',
   },
   filledButton: {
     flex: 1,
-    backgroundColor: '#f18060',
+    backgroundColor: '#1F509A',
     paddingVertical: 10,
     borderRadius: 8,
   },
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: "#dd6b4d",
+    borderColor: "#1F509A",
     borderRadius: 8,
     marginVertical: 8,
     backgroundColor: "#fff",

@@ -88,13 +88,47 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
                 </Pressable>
               </View>
 
-              {/* Product Name */}
-              <Text style={styles.label}>
-                Sản Phẩm:{" "}
-                <Text style={styles.bold}>
-                  {orderItem?.labelingStandard || "--"}
-                </Text>
+{/* Order Info - Full Details */}
+            <View style={styles.orderInfo}>
+              <Text style={styles.orderCode}>
+                Đơn hàng: {orderItem?.idNumber || '---'}
               </Text>
+              <Text style={styles.orderDetail}>
+                Sản phẩm: {orderItem?.labelingStandard || '---'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                SKU: {orderItem?.skuOpt?.code || orderItem?.code || 'N/A'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                Kích thước: {orderItem?.stateOpt?.name || '---'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                Số lượng: {orderItem?.area || '---'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                Khách hàng: {orderItem?.name || '---'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                SĐT: {orderItem?.phone || '---'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                Địa chỉ: {orderItem?.address || '---'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                Loại cửa hàng: {orderItem?.facilityType?.name || '---'}
+              </Text>
+              <Text style={styles.orderDetail}>
+                Cửa hàng: {orderItem?.orgUnit?.name || '---'}
+              </Text>
+              {orderItem?.note && (
+                <Text style={styles.orderDetail}>
+                  Ghi chú: {orderItem.note}
+                </Text>
+              )}
+              <Text style={styles.orderDetail}>
+                Ngày tạo: {orderItem?.createdDate ? new Date(orderItem.createdDate).toLocaleDateString("vi-VN") : '---'}
+              </Text>
+            </View>
 
               {/* Thumbnail */}
               <Text style={styles.label}>Hình Ảnh:</Text>
@@ -196,9 +230,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     overflow: "hidden",
   },
+  orderInfo: {
+    backgroundColor: "#f5f5f5",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  orderDetail: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 3,
+  },
   inputBox: {
     borderWidth: 1.5,
-    borderColor: "#f18060",
+    borderColor: "#1F509A",
     borderRadius: 8,
     minHeight: 80,
     padding: 10,
@@ -210,12 +255,12 @@ const styles = StyleSheet.create({
   outlinedButton: {
     flex: 1,
     borderWidth: 1.5,
-    borderColor: "#f18060",
+    borderColor: "#1F509A",
     paddingVertical: 10,
     borderRadius: 8,
   },
-  outlinedText: { textAlign: "center", color: "#f18060", fontWeight: "600" },
-  filledButton: { flex: 1, backgroundColor: "#f18060", paddingVertical: 10, borderRadius: 8 },
+  outlinedText: { textAlign: "center", color: "#1F509A", fontWeight: "600" },
+  filledButton: { flex: 1, backgroundColor: "#1F509A", paddingVertical: 10, borderRadius: 8 },
   filledText: { textAlign: "center", color: "white", fontWeight: "600" },
 
   // Full image

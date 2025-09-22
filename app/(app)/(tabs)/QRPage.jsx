@@ -8,7 +8,8 @@ import {
   Alert,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker'
+import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 
 const QRPage = () => {
   const [facing, setFacing] = useState('back');
@@ -26,12 +27,29 @@ const QRPage = () => {
     );
   }
 
+  // Navigate to result page
+  const navigateToResult = (qrData) => {
+    console.log('Attempting to navigate with data:', qrData);
+    
+    try {
+      router.navigate({
+        pathname: 'QRResultPage',
+        params: { qrData }
+      });
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to alert
+      Alert.alert('Navigation Error', `Could not navigate. QR Data: ${qrData}`);
+    }
+  };
+
   // Scan handler
   const handleScan = ({ data }) => {
     if (!scanned) {
       setScanned(true);
-      Alert.alert('Đã quét mã QR', `${data}`);
-      setTimeout(() => setScanned(false), 3000);
+      navigateToResult(data);
+      // Reset after delay
+      setTimeout(() => setScanned(false), 2000);
     }
   };
 
@@ -41,30 +59,46 @@ const QRPage = () => {
   };
 
   const pickImageAndScan = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 1,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      try {
-        // Use Camera.scanFromURLAsync instead of BarCodeScanner
-        const barcodes = await Camera.scanFromURLAsync(result.uri, [
-          Camera.Constants.BarCodeType.qr,
-        ]);
-
-        if (barcodes.length > 0) {
-          const { data } = barcodes[0];
-          // handle found QR code…
-        } else {
-          Alert.alert('Không tìm thấy QR code trong hình ảnh này');
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const imageUri = result.assets[0].uri;
+        
+        try {
+          // Try using CameraView.scanFromURLAsync
+          const scanResult = await CameraView.scanFromURLAsync(imageUri, ['qr']);
+          
+          if (scanResult && scanResult.length > 0) {
+            const qrData = scanResult[0].data;
+            navigateToResult(qrData);
+          } else {
+            Alert.alert('Không tìm thấy QR code', 'Không tìm thấy QR code trong hình ảnh này.');
+          }
+        } catch (scanError) {
+          console.error('Scan from URL error:', scanError);
+          
+          // Fallback: Show alert that feature is not available
+          Alert.alert(
+            'Tính năng chưa sẵn sàng', 
+            'Quét QR code từ hình ảnh hiện tại chưa khả dụng. Vui lòng sử dụng camera để quét trực tiếp.',
+            [
+              {
+                text: 'OK',
+                onPress: () => console.log('Image scan not available')
+              }
+            ]
+          );
         }
-      } catch (err) {
-        Alert.alert('Không thể quét hình ảnh', err.message);
       }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Lỗi', 'Không thể chọn hình ảnh: ' + error.message);
     }
   };
-
 
   return (
     <View style={styles.container}>
@@ -74,17 +108,21 @@ const QRPage = () => {
         barcodeScannerSettings={{
           barcodeTypes: ['qr'],
         }}
-        onBarcodeScanned={handleScan}
+        onBarcodeScanned={scanned ? undefined : handleScan}
       >
         <View style={styles.overlay}>
           <View style={styles.scanArea} />
         </View>
-
+{/* 
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
             <Text style={styles.buttonText}>Đổi camera</Text>
           </TouchableOpacity>
-        </View>
+          
+          <TouchableOpacity style={[styles.button, styles.imageButton]} onPress={pickImageAndScan}>
+            <Text style={styles.buttonText}>Chọn từ thư viện</Text>
+          </TouchableOpacity>
+        </View> */}
       </CameraView>
     </View>
   );
@@ -119,6 +157,9 @@ const styles = StyleSheet.create({
     bottom: 40,
     width: '100%',
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
   },
   button: {
     backgroundColor: '#2196F3',
@@ -126,6 +167,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 25,
     elevation: 3,
+  },
+  imageButton: {
+    backgroundColor: '#4CAF50',
   },
   buttonText: {
     color: '#fff',

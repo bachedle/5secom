@@ -36,7 +36,6 @@ export default function AppLayout() {
           headerShown: true,
           headerBackVisible: false,
         }}
-      
       />
       <Stack.Screen
         name="category"
@@ -82,6 +81,14 @@ export default function AppLayout() {
           headerBackVisible: false,
                     animation: "slide_from_right", // ✅ transition animation
 
+        }}
+      />
+      <Stack.Screen 
+        name="QRResultPage" 
+        options={{
+          title: 'Kết Quả',
+          headerShown: true,
+          headerBackVisible: false,
         }}
       />
     </Stack>
