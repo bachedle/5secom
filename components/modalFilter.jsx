@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     marginTop: 20
   },
   filledButton: {
-    backgroundColor: '#f18060',
+    backgroundColor: '#1F509A',
     width: "48%",
     borderRadius: 8,
   },
@@ -191,7 +191,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   resetButton: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#ffffff',
+    borderColor: "#1F509A",
+    borderWidth: 1.5,
     width: " 48%",
     borderRadius: 8,
   },

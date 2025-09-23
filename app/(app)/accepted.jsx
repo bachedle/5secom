@@ -59,7 +59,10 @@ const AcceptedOrderPage = () => {
     const facilityMatch = order.facilityType?.code === facilityCode;
     const searchMatch =
       searchText.trim() === '' ||
-      (order.name?.toLowerCase() || '').includes(searchText.toLowerCase());
+      (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.idNumber?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
     const statusMatch = selectedStatus ? order.label === selectedStatus : true;
     const dateMatch = selectedDate ? order.updateDate === selectedDate.toISOString().split('T')[0] : true;
 
