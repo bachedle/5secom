@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -20,13 +21,12 @@ const LoginPage = () => {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       setUsername('');
       setPassword('');
-      setRememberMe(false);
     }, [])
   );
 
@@ -49,6 +49,10 @@ const LoginPage = () => {
       return false;
     }
     return true;
+  };
+
+  const handleForgotPassword = () => {
+    setShowForgotPasswordModal(true);
   };
 
   return (
@@ -78,20 +82,8 @@ const LoginPage = () => {
         editable={!loading}
       />
 
-      <View style={styles.row}>
-        <TouchableOpacity
-          style={styles.checkboxContainer}
-          onPress={() => setRememberMe(!rememberMe)}
-          disabled={loading}
-        >
-          <MaterialCommunityIcons
-            name={rememberMe ? 'checkbox-marked' : 'checkbox-blank-outline'}
-            size={22}
-            color="#0A3981"
-          />
-          <Text style={styles.rememberText}>Remember me</Text>
-        </TouchableOpacity>
-        <TouchableOpacity disabled={loading}>
+      <View style={styles.forgotPasswordContainer}>
+        <TouchableOpacity onPress={handleForgotPassword} disabled={loading}>
           <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
@@ -107,6 +99,29 @@ const LoginPage = () => {
           <Text style={styles.signInText}>Sign In</Text>
         )}
       </TouchableOpacity>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={showForgotPasswordModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowForgotPasswordModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Quên mật khẩu</Text>
+            <Text style={styles.modalMessage}>
+              Vui lòng liên hệ Admin hoặc Quản lý để được cấp mật khẩu mới
+            </Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setShowForgotPasswordModal(false)}
+            >
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -223,19 +238,9 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     fontSize: 16,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
     marginVertical: 12,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rememberText: {
-    marginLeft: 8,
-    fontSize: 14,
   },
   forgotText: {
     fontSize: 13,
@@ -255,5 +260,53 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    margin: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#1F509A',
+  },
+  modalMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+    color: '#333',
+  },
+  modalButton: {
+    backgroundColor: '#1F509A',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

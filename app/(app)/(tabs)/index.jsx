@@ -79,7 +79,6 @@ const HomePage = () => {
         {/* White content that overlaps orange */}
         <View style={styles.contentWrapper}>
           <OrderStatusTab />
-          {/* 🔥 Add more scrollable stuff here later */}
         </View>
       </ScrollView>
     </View>
