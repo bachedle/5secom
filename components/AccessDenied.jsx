@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 const AccessDenied = ({ message = "Bạn không có quyền truy cập vào trang này." }) => {
   return (
     <View style={styles.container}>
-      <Ionicons name="lock-closed" size={64} color="#E8775D" style={{ marginBottom: 16 }} />
+      <Ionicons name="lock-closed" size={64} color="#1F509A" style={{ marginBottom: 16 }} />
       <Text style={styles.title}>Truy cập bị hạn chế</Text>
       <Text style={styles.message}>{message}</Text>
     </View>

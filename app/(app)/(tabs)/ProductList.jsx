@@ -77,7 +77,7 @@ const ProductListPage = () => {
     const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
     const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
     
-    return searchMatch && statusMatch && dateMatch && isUnassigned;
+    return searchMatch && statusMatch && dateMatch;
   });
 
   const facilityTypes = Array.from(

@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 const API_URL = "https://5secom.dientoan.vn/api";
 
 const ModalAccepted = ({ visible, onClose, orderItem }) => {
-  const { draftOrder, updateDraftPath, clearDraft, editOrder } = useOrder();
+  const { draftOrder, updateDraftPath, clearDraft, updateOrderAPI, fetchOrder } = useOrder();
   const [orderType, setOrderType] = useState([]);
   const [showFullImage, setShowFullImage] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
@@ -50,7 +50,8 @@ const ModalAccepted = ({ visible, onClose, orderItem }) => {
         facilityType: { id: draftOrder.facilityType.id }
       };
 
-      await editOrder(orderItem.id, updates);
+      await updateOrderAPI(orderItem.id, updates);
+      
 
       if (clearDraft) clearDraft();
       

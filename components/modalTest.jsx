@@ -19,9 +19,9 @@ import { useAuth } from "../utils/authContext";
 const ModalTest = ({ visible, onClose, orderItem }) => {
   const [showFullImage, setShowFullImage] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
-  const { editOrder } = useOrder();
+  const { editOrder, updateOrderAPI } = useOrder();
   const { user } = useAuth();
-
+ 
   const handleAcceptOrder = async () => {
     if (!orderItem || !user) return;
 
@@ -40,7 +40,7 @@ const ModalTest = ({ visible, onClose, orderItem }) => {
         issuePlace: user.name,
       };
 
-      await editOrder(orderItem.id, updates);
+      await updateOrderAPI(orderItem.id, updates);
       console.log(updates)
       Alert.alert("Nhận đơn thành công!");
 

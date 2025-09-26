@@ -170,11 +170,6 @@ const AddOrderInfo = () => {
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Quyền bị từ chối", "Bạn cần cấp quyền để chọn ảnh.");
-      return;
-    }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
