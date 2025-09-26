@@ -182,7 +182,6 @@ const UserEdit = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -315,7 +314,6 @@ const UserEdit = () => {
             />
           </ScrollView>
         </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
 
        {/* Footer buttons */}
           <View style={styles.footer}>

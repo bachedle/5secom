@@ -20,7 +20,6 @@ import { useAuth } from '../../utils/authContext';
 const FOOTER_HEIGHT = 80;
 const HEADER_HEIGHT = 100;
 
-
 const UserPassword = () => {
   const router = useRouter();
   const { updatePassword } = useAuth();
@@ -108,13 +107,10 @@ const UserPassword = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       {/* FORM AREA */}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
             style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={
-
-            Platform.OS === 'ios' ? HEADER_HEIGHT + FOOTER_HEIGHT : 0}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? HEADER_HEIGHT + FOOTER_HEIGHT : 0}
         >
           <ScrollView
             contentContainerStyle={styles.contentWrapper}
@@ -185,6 +181,23 @@ const UserPassword = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Password Requirements - Inline */}
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementsTitle}>Yêu cầu mật khẩu:</Text>
+              <Text style={[
+                styles.requirement,
+                newPassword.length >= 6 && styles.requirementMet
+              ]}>
+                • Ít nhất 6 ký tự
+              </Text>
+              <Text style={[
+                styles.requirement,
+                currentPassword && newPassword && currentPassword !== newPassword && styles.requirementMet
+              ]}>
+                • Khác mật khẩu hiện tại
+              </Text>
+            </View>
+
             {/* Confirm Password */}
             <Text style={styles.subText}>Xác nhận mật khẩu mới</Text>
             <View style={[
@@ -218,25 +231,11 @@ const UserPassword = () => {
                 Mật khẩu xác nhận không khớp
               </Text>
             )}
+
+            {/* Add some bottom padding to ensure content is visible above footer */}
+            <View style={{ height: 100 }} />
           </ScrollView>
         </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-
-       <View style={styles.requirementsContainer}>
-              <Text style={styles.requirementsTitle}>Yêu cầu mật khẩu:</Text>
-              <Text style={[
-                styles.requirement,
-                newPassword.length >= 6 && styles.requirementMet
-              ]}>
-                • Ít nhất 6 ký tự
-              </Text>
-              <Text style={[
-                styles.requirement,
-                currentPassword && newPassword && currentPassword !== newPassword && styles.requirementMet
-              ]}>
-                • Khác mật khẩu hiện tại
-              </Text>
-            </View>
 
       {/* FIXED FOOTER */}
       <View style={styles.footer}>
@@ -268,9 +267,10 @@ export default UserPassword;
 
 const styles = StyleSheet.create({
   contentWrapper: {
-    paddingBottom: 120,
+    paddingBottom: 20,
     paddingVertical: 20,
     paddingHorizontal: 20,
+    bottom:50
   },
   title: {
     fontSize: 24,
@@ -326,7 +326,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     padding: 16,
     borderRadius: 8,
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 10,
   },
   requirementsTitle: {
     fontSize: 14,
@@ -374,12 +375,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   footer: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
     backgroundColor: '#fff',
-    bottom: 50, // ✅ stick to bottom instead of 50px up
   },
 });

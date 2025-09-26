@@ -4,12 +4,60 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AuthContext } from '../../../utils/authContext';
 
+// Initials Avatar Component
+const InitialsAvatar = ({ name, size = 150 }) => {
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const words = name.trim().split(' ');
+    if (words.length === 1) return words[0].charAt(0).toUpperCase();
+    return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const getBackgroundColor = (name) => {
+    if (!name) return '#1F509A';
+    // Generate a consistent color based on the name
+    const colors = ['#1F509A', '#E74C3C', '#3498DB', '#2ECC71', '#F39C12', '#9B59B6', '#1ABC9C', '#E67E22'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  };
+
+  return (
+    <View style={[
+      styles.avatar, 
+      { 
+        backgroundColor: getBackgroundColor(name),
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }
+    ]}>
+      <Text style={{
+        color: 'white',
+        fontSize: size * 0.3,
+        fontWeight: 'bold',
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+      }}>
+        {getInitials(name)}
+      </Text>
+    </View>
+  );
+};
+
 const UserPage = () => {
   const router = useRouter();
   const { logOut, user, token, loading, fetchUser } = useContext(AuthContext);
   
   const [profileLoading, setProfileLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(false);
 
   // Check if user is admin
   const isAdmin = () => {
@@ -62,6 +110,28 @@ const UserPage = () => {
     router.navigate('UserPassword');
   };
 
+  // Render Avatar with fallback to InitialsAvatar
+  const renderAvatar = () => {
+    const avatarSource = user.image || user.avatar;
+    const userName = user.name || user.full_name || user.credname || user.username || user.email;
+    
+    if (avatarSource && !imageError) {
+      return (
+        <Image 
+          source={{ uri: avatarSource }} 
+          style={styles.avatar} 
+          onError={() => {
+            console.log('Failed to load user image');
+            setImageError(true);
+          }}
+        />
+      );
+    }
+
+    // Show initials avatar as fallback
+    return <InitialsAvatar name={userName} size={150} />;
+  };
+
   // Show loading state
   if (loading || profileLoading) {
     return (
@@ -109,19 +179,7 @@ const UserPage = () => {
 
       {/* Avatar */}
       <View style={styles.avatarWrapper}>
-        {user.image || user.avatar ? (
-          <Image 
-            source={{ uri: user.image || user.avatar }} 
-            style={styles.avatar} 
-            onError={() => {
-              console.log('Failed to load user image');
-            }}
-          />
-        ) : (
-          <View style={styles.avatar}>
-            <MaterialCommunityIcons name="account" size={100} color="#ccc" />
-          </View>
-        )}
+        {renderAvatar()}
       </View>
 
       {/* Content */}
@@ -246,7 +304,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 150,
     height: 150,
-    borderRadius: 180,
+    borderRadius: 75,
     backgroundColor: '#ccc',
     borderWidth: 4,
     borderColor: '#fff',
@@ -257,7 +315,7 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 180,
+    borderRadius: 75,
   },
   placeholder: {
     width: '100%',
