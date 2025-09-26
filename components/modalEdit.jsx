@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   outlinedButton: {
     flex: 1,
     backgroundColor: "white",
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#1F509A",
     paddingVertical: 10,
     borderRadius: 8,

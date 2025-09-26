@@ -226,7 +226,6 @@ const AddOrderInfo = () => {
       </View>
 
       {/* CONTENT */}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -349,7 +348,6 @@ const AddOrderInfo = () => {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
 
       {/* FOOTER */}
       <View style={styles.footer}>

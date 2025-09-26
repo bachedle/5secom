@@ -6,8 +6,9 @@ import {
   Pressable,
   Platform,
   KeyboardAvoidingView,
+  Animated,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -23,10 +24,46 @@ const ModalFilter = ({
   const [selectedOrder, setSelectedOrder] = useState(selectedStatus || '');
   const [deliveryDate, setDeliveryDate] = useState(selectedDate || null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
     setSelectedOrder(selectedStatus || '');
     setDeliveryDate(selectedDate || null);
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible) {
+      // Animate in
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Animate out - smoother close animation
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.95,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
   }, [visible]);
 
   const confirmFilter = () => {
@@ -40,85 +77,110 @@ const ModalFilter = ({
     if (selected) setDeliveryDate(selected);
   };
 
+  // Handle outside press to close modal
+  const handleOverlayPress = () => {
+    onClose();
+  };
+
+  // Prevent modal from closing when pressing inside the modal box
+  const handleModalBoxPress = (event) => {
+    event.stopPropagation();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={styles.modalBox}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Tìm kiếm nâng cao</Text>
-            <Pressable onPress={onClose} hitSlop={8}>
-              <Text style={styles.closeText}>✕</Text>
-            </Pressable>
-          </View>
+        {/* Animated overlay that closes modal when pressed */}
+        <Animated.View style={[styles.overlayPressable, { opacity: fadeAnim }]}>
+          <Pressable style={styles.overlayPressableInner} onPress={handleOverlayPress}>
+            {/* Animated modal content that doesn't close when pressed */}
+            <Animated.View 
+              style={[
+                styles.modalBox, 
+                { 
+                  opacity: fadeAnim,
+                  transform: [{ scale: scaleAnim }]
+                }
+              ]}
+            >
+              <Pressable onPress={handleModalBoxPress}>
+                {/* Header */}
+                <View style={styles.header}>
+                  <Text style={styles.title}>Tìm kiếm nâng cao</Text>
+                  <Pressable onPress={onClose} hitSlop={8}>
+                    <Text style={styles.closeText}>✕</Text>
+                  </Pressable>
+                </View>
 
-          {/* Status Picker */}
-          <Text style={styles.label}>Trạng thái</Text>
-          <Picker
-            style={{ backgroundColor: '#f0f0f0' }}
-            selectedValue={selectedOrder}
-            onValueChange={(itemValue) => setSelectedOrder(itemValue)}
-          >
-            {/* Default option */}
-            <Picker.Item label="Tất cả" value="" />
+                {/* Status Picker */}
+                <Text style={styles.label}>Trạng thái</Text>
+                <Picker
+                  style={{ backgroundColor: '#f0f0f0' }}
+                  selectedValue={selectedOrder}
+                  onValueChange={(itemValue) => setSelectedOrder(itemValue)}
+                >
+                  {/* Default option */}
+                  <Picker.Item label="Tất cả" value="" />
 
-            {/* Null-safe sort and mapping */}
-            {[...facilityTypes]
-              .sort((a, b) => (a?.orderNo ?? Infinity) - (b?.orderNo ?? Infinity))
-              .map((ft, idx) => (
-                <Picker.Item
-                  key={ft?.id ?? idx}             // fallback key if ft is null
-                  label={ft?.name ?? '—'}         // fallback label
-                  value={ft?.name ?? ''}          // fallback value
-                />
-              ))}
-          </Picker>
+                  {/* Null-safe sort and mapping */}
+                  {[...facilityTypes]
+                    .sort((a, b) => (a?.orderNo ?? Infinity) - (b?.orderNo ?? Infinity))
+                    .map((ft, idx) => (
+                      <Picker.Item
+                        key={ft?.id ?? idx}             // fallback key if ft is null
+                        label={ft?.name ?? '—'}         // fallback label
+                        value={ft?.name ?? ''}          // fallback value
+                      />
+                    ))}
+                </Picker>
 
-          {/* Delivery Date Picker */}
-          <Text style={styles.label}>Ngày giao</Text>
-          <Pressable
-            style={styles.dateButton}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.dateText}>
-              {deliveryDate
-                ? deliveryDate.toLocaleDateString()
-                : 'Chọn ngày giao'}
-            </Text>
+                {/* Delivery Date Picker */}
+                <Text style={styles.label}>Ngày giao</Text>
+                <Pressable
+                  style={styles.dateButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={styles.dateText}>
+                    {deliveryDate
+                      ? deliveryDate.toLocaleDateString()
+                      : 'Chọn ngày giao'}
+                  </Text>
+                </Pressable>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={deliveryDate || new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChange}
+                  />
+                )}
+
+                {/* Confirm + Reset Buttons */}
+                <View style={styles.buttonRow}>
+                  
+                  <Pressable
+                  style={[ styles.resetButton]}
+                  onPress={() => {
+                    setSelectedOrder('');
+                    setDeliveryDate(null);
+                    onStatusFilterChange('');
+                    onDateFilterChange(null);
+                    onClose();
+                  }}
+                >
+                  <Text style={styles.resetText}>Xóa Bộ Lọc</Text>
+                </Pressable>
+                <Pressable style={styles.filledButton} onPress={confirmFilter}>
+                    <Text style={styles.filledText}>Xác Nhận</Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </Animated.View>
           </Pressable>
-          {showDatePicker && (
-            <DateTimePicker
-              value={deliveryDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
-            />
-          )}
-
-          {/* Confirm + Reset Buttons */}
-          <View style={styles.buttonRow}>
-            
-            <Pressable
-            style={[ styles.resetButton]}
-            onPress={() => {
-              setSelectedOrder('');
-              setDeliveryDate(null);
-              onStatusFilterChange('');
-              onDateFilterChange(null);
-              onClose();
-            }}
-          >
-            <Text style={styles.resetText}>Xóa Bộ Lọc</Text>
-          </Pressable>
-          <Pressable style={styles.filledButton} onPress={confirmFilter}>
-              <Text style={styles.filledText}>Xác Nhận</Text>
-            </Pressable>
-          </View>
-          
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -129,7 +191,16 @@ export default ModalFilter;
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  overlayPressable: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  overlayPressableInner: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -180,7 +251,7 @@ const styles = StyleSheet.create({
     marginTop: 20
   },
   filledButton: {
-    backgroundColor: '#f18060',
+    backgroundColor: '#1F509A',
     width: "48%",
     borderRadius: 8,
   },
@@ -191,7 +262,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   resetButton: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#ffffff',
+    borderColor: "#1F509A",
+    borderWidth: 1.5,
     width: " 48%",
     borderRadius: 8,
   },

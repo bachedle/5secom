@@ -11,8 +11,9 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   RefreshControl,
+  Animated,
 } from 'react-native';
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -38,11 +39,39 @@ const ManufacturingListPage = () => {
   const [searchText, setSearchText] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [deliveryDate, setDeliveryDate] = useState(null);
   const { user } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    if (modalVisible) {
+      // Animate in with fade and scale
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Animate out - fade only
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [modalVisible]);
 
   const handleBack = () => {
     router.dismiss();
@@ -57,7 +86,9 @@ const ManufacturingListPage = () => {
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
-    if (selectedDate) setDeliveryDate(selectedDate);
+    if (selectedDate) {
+      setSelectedDate(selectedDate);
+    }
   };
 
   const confirmFilter = () => {
@@ -65,8 +96,18 @@ const ManufacturingListPage = () => {
   };
 
   const clearFilter = () => {
-    setDeliveryDate(null);
+    setSelectedDate(null);
     setModalVisible(false);
+  };
+
+  // Handle outside press to close modal
+  const handleOverlayPress = () => {
+    setModalVisible(false);
+  };
+
+  // Prevent modal from closing when pressing inside the modal box
+  const handleModalBoxPress = (event) => {
+    event.stopPropagation();
   };
 
   // Pull to refresh handler
@@ -100,6 +141,7 @@ const ManufacturingListPage = () => {
     const searchMatch =
       (order.name?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.skuOpt?.code?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
+      (order.idNumber?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
       (order.code?.toLowerCase() || '').includes(searchText.toLowerCase());
     const statusMatch = selectedStatus ? order.facilityType?.name === selectedStatus : true;
     const dateMatch = selectedDate ? order.createdDate?.split('T')[0] === selectedDate.toISOString().split('T')[0] : true;
@@ -119,9 +161,9 @@ const ManufacturingListPage = () => {
     );
   };
 
-  useEffect(() => {
-  console.log("Order IDs:", orders.map(o => o.id));
-}, [orders]);
+  // useEffect(() => {
+  //   console.log("Order IDs:", orders.map(o => o.id));
+  // }, [orders]);
 
   return (
     <View style={styles.CONTAINER}>
@@ -164,58 +206,73 @@ const ManufacturingListPage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Filter Modal */}
+      {/* Filter Modal with Fade Animation */}
       <Modal
         visible={modalVisible}
         transparent
-        animationType="fade"
+        animationType="none"
         onRequestClose={() => setModalVisible(false)}
       >
         <KeyboardAvoidingView
           style={styles.overlay}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.modalBox}>
-            <View style={styles.header}>
-              <Text style={styles.title}>Tìm kiếm nâng cao</Text>
-              <Pressable onPress={() => setModalVisible(false)} hitSlop={8}>
-                <Text style={styles.closeText}>✕</Text>
-              </Pressable>
-            </View>
-
-            <Text style={styles.label}>Ngày giao</Text>
-            <Pressable
-              style={styles.dateButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.dateText}>
-                {deliveryDate
-                  ? deliveryDate.toLocaleDateString()
-                  : 'Chọn ngày giao'}
-              </Text>
-            </Pressable>
-            {showDatePicker && (
-              <DateTimePicker
-                value={deliveryDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-              />
-            )}
-
-            <View style={styles.buttonRow}>
-              <Pressable style={styles.filledButton} onPress={confirmFilter}>
-                <Text style={styles.filledText}>Xác Nhận</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.filledButton, styles.resetButton]}
-                onPress={clearFilter}
+          {/* Animated overlay that closes modal when pressed */}
+          <Animated.View style={[styles.overlayPressable, { opacity: fadeAnim }]}>
+            <Pressable style={styles.overlayPressableInner} onPress={handleOverlayPress}>
+              {/* Animated modal content that doesn't close when pressed */}
+              <Animated.View 
+                style={[
+                  styles.modalBox, 
+                  { 
+                    opacity: fadeAnim,
+                    transform: [{ scale: scaleAnim }]
+                  }
+                ]}
               >
-                <Text style={styles.resetText}>Xóa Bộ Lọc</Text>
-              </Pressable>
-            </View>
-          </View>
+                <Pressable onPress={handleModalBoxPress}>
+                  <View style={styles.header}>
+                    <Text style={styles.title}>Tìm kiếm nâng cao</Text>
+                    <Pressable onPress={() => setModalVisible(false)} hitSlop={8}>
+                      <Text style={styles.closeText}>✕</Text>
+                    </Pressable>
+                  </View>
+
+                  <Text style={styles.label}>Ngày giao</Text>
+                  <Pressable
+                    style={styles.dateButton}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text style={styles.dateText}>
+                      {selectedDate
+                        ? selectedDate.toLocaleDateString()
+                        : 'Chọn ngày giao'}
+                    </Text>
+                  </Pressable>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate || new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={handleDateChange}
+                    />
+                  )}
+
+                  <View style={styles.buttonRow}>
+                    <Pressable
+                      style={[styles.filledButton, styles.resetButton]}
+                      onPress={clearFilter}
+                    >
+                      <Text style={styles.resetText}>Xóa Bộ Lọc</Text>
+                    </Pressable>
+                    <Pressable style={styles.filledButton} onPress={confirmFilter}>
+                      <Text style={styles.filledText}>Xác Nhận</Text>
+                    </Pressable>
+                  </View>
+                </Pressable>
+              </Animated.View>
+            </Pressable>
+          </Animated.View>
         </KeyboardAvoidingView>
       </Modal>
 
@@ -353,7 +410,16 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  overlayPressable: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  overlayPressableInner: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -416,7 +482,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   resetButton: {
-    backgroundColor: '#E0E0E0'
+    backgroundColor: '#ffffff',
+    borderColor: "#1F509A",
+    borderWidth: 1.5,
   },
   resetText: {
     textAlign: 'center',
@@ -454,4 +522,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-})
+});

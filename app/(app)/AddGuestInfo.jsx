@@ -42,7 +42,6 @@ const AddGuestInfo = () => {
       </View>
 
       {/* CONTENT */}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -116,7 +115,6 @@ const AddGuestInfo = () => {
             />
           </ScrollView>
         </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
 
       {/* FOOTER BUTTONS */}
       <View style={styles.footer}>
