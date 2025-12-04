@@ -2,9 +2,9 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
-export const API = 'https://5secom.dientoan.vn/api'; // Export API for other components
-const CLIENT_ID = 'dichtetayninh';
-const CLIENT_SECRET = 'AVTaQ7vJes38oseonKqt';
+export const API = process.env.BASE_URL;
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 export const AuthContext = createContext({
   isLoggedIn: false,
